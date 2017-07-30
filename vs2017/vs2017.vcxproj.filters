@@ -51,6 +51,9 @@
     <ClCompile Include="..\src\uWS\WebSocketImpl.cpp">
       <Filter>uWS</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\HighwayMap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\json.hpp">
@@ -88,6 +91,18 @@
     </ClInclude>
     <ClInclude Include="..\src\uWS\WebSocketProtocol.h">
       <Filter>uWS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\spline.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\HighwayMap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Waypoint.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Utils.hpp">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

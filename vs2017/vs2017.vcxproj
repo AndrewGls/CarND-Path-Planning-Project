@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\HighwayMap.cpp" />
     <ClCompile Include="..\src\main.cpp" />
     <ClCompile Include="..\src\uWS\Extensions.cpp" />
     <ClCompile Include="..\src\uWS\Group.cpp" />
@@ -32,7 +33,10 @@
     <ClCompile Include="..\src\uWS\WebSocketImpl.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\HighwayMap.h" />
     <ClInclude Include="..\src\json.hpp" />
+    <ClInclude Include="..\src\spline.h" />
+    <ClInclude Include="..\src\Utils.hpp" />
     <ClInclude Include="..\src\uWS\Extensions.h" />
     <ClInclude Include="..\src\uWS\Group.h" />
     <ClInclude Include="..\src\uWS\HTTPSocket.h" />
@@ -44,6 +48,7 @@
     <ClInclude Include="..\src\uWS\uWS.h" />
     <ClInclude Include="..\src\uWS\WebSocket.h" />
     <ClInclude Include="..\src\uWS\WebSocketProtocol.h" />
+    <ClInclude Include="..\src\Waypoint.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
