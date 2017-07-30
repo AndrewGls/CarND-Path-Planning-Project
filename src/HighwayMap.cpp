@@ -31,7 +31,13 @@ HighwayMap::HighwayMap()
 
 Point HighwayMap::getXY(double s, double d) const
 {
-	return Point();
+	s = norm_s(s);
+
+	Point pt(x_spline_(s), y_spline_(s));
+
+	// add d to final point!
+
+	return pt;
 }
 
 
