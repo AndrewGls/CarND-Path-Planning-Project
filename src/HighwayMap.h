@@ -24,12 +24,12 @@ private:
 	std::vector<Waypoint> waypoints_;
 	tk::spline x_spline_; // x(s)
 	tk::spline y_spline_; // y(s)
-	tk::spline dx_spline_; // d_x(s)
-	tk::spline dy_spline_; // d_y(s)
+//	tk::spline dx_spline_; // d_x(s)
+//	tk::spline dy_spline_; // d_y(s)
 };
 
 
 inline double HighwayMap::norm_s(double s) const
 {
-	return (s > max_s_) ? (s -= max_s_) : (s < max_s_ ? (s += max_s_) : s);
+	return (s > max_s_) ? (s -= max_s_) : (s < -max_s_ ? (s += max_s_) : s);
 }

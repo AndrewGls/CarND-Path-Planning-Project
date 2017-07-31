@@ -31,6 +31,7 @@
     <ClCompile Include="..\src\uWS\uUV.cpp" />
     <ClCompile Include="..\src\uWS\WebSocket.cpp" />
     <ClCompile Include="..\src\uWS\WebSocketImpl.cpp" />
+    <ClCompile Include="..\src\Vehicle.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\HighwayMap.h" />
@@ -48,6 +49,7 @@
     <ClInclude Include="..\src\uWS\uWS.h" />
     <ClInclude Include="..\src\uWS\WebSocket.h" />
     <ClInclude Include="..\src\uWS\WebSocketProtocol.h" />
+    <ClInclude Include="..\src\Vehicle.h" />
     <ClInclude Include="..\src\Waypoint.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

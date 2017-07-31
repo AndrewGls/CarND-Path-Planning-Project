@@ -7,6 +7,15 @@ struct Point
 	double y;
 
 	Point(double x = 0, double y = 0) : x(x), y(y) {}
+
+	Point& operator*(double n) { x *= n; y *= n; return *this; }
+	Point& operator+(const Point& r) {
+		if (this != &r) {
+			x += r.x;
+			y += r.y;
+		}
+		return *this;
+	}
 };
 
 

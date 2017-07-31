@@ -34,10 +34,9 @@ Point HighwayMap::getXY(double s, double d) const
 	s = norm_s(s);
 
 	Point pt(x_spline_(s), y_spline_(s));
-
-	// add d to final point!
-
-	return pt;
+	// normal vector
+	Point nv(-y_spline_.deriv(1,s), x_spline_.deriv(1,s));
+	return pt + nv * d;
 }
 
 
@@ -46,24 +45,18 @@ void HighwayMap::fit_spline()
 	// Spline fitting
 	sort(waypoints_.begin(), waypoints_.end(), [](const Waypoint& l, const Waypoint& r) {return l.s < r.s; });
 
-	vector<double> x, y, s, d_x, d_y;
+	vector<double> x, y, s;
 	x.resize(waypoints_.size());
 	y.resize(waypoints_.size());
 	s.resize(waypoints_.size());
-	d_x.resize(waypoints_.size());
-	d_y.resize(waypoints_.size());
 	for (size_t i = 0; i < waypoints_.size(); i++) {
 		const auto& w = waypoints_[i];
 		x[i] = w.x;
 		y[i] = w.y;
 		s[i] = w.s;
-		d_x[i] = w.d_x;
-		d_y[i] = w.d_y;
 	}
 
 	x_spline_.set_points(s, x);
 	y_spline_.set_points(s, y);
-	dx_spline_.set_points(s, d_x);
-	dy_spline_.set_points(s, d_y);
 }
 
