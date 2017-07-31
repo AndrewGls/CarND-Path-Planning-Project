@@ -29,9 +29,9 @@ void Vehicle::getTrajectory(const VehicleState& newState,
 	next_x_vals_.clear();
 	next_y_vals_.clear();
 
-	int path_size = previous_path_x.size();
+	size_t path_size = previous_path_x.size();
 
-	for (int i = 0; i < path_size; i++)
+	for (size_t i = 0; i < path_size; i++)
 	{
 		next_x_vals_.push_back(previous_path_x[i]);
 		next_y_vals_.push_back(previous_path_y[i]);
@@ -75,9 +75,9 @@ void Vehicle::trajectory_KeepLine(const vector<double>& previous_path_x,
 		s += s_dot_;
 		Point pt = map_.getXY(s, -d);
 		last_s_ = s;
-		cout << "s: " << s << " d: " << d << " ptx: " << pt.x << " pty: " << pt.y << std::endl;
 		next_x_vals_.push_back(pt.x);
 		next_y_vals_.push_back(pt.y);
+		cout << "s: " << s << " d: " << d << " ptx: " << pt.x << " pty: " << pt.y << std::endl;
 	}
 
 }
