@@ -20,6 +20,7 @@ Vehicle::Vehicle(const HighwayMap& map)
 	, last_v_(0)
 	, last_a_(0)
 {
+	target_speed_ = speed_limit_;
 	n_waypoints_ = static_cast<int>(2. / delta_t + 0.5); // 1000 ms / 20ms
 }
 
@@ -45,7 +46,8 @@ void Vehicle::updateState(const CarLocalizationData& newState)
 
 	if (set_init_vs_) {
 		set_init_vs_ = false;
-		last_v_ = newState.speed;
+		last_s_ = newState.s;
+		last_v_ = newState.speed *  0.44704;  // convert MPH to m/sec !!!!
 		last_a_ = max_a_;
 		init_vs_ = newState;
 	}
@@ -65,33 +67,35 @@ void Vehicle::trajectory_KeepLine(const vector<double>& previous_path_x, const v
 		next_y_vals_.push_back(previous_path_y[i]);
 	}
 
-	double s = vs_.s;
-	double v = last_v_;
-	double a = last_a_;
-
+	double s = 0;
+	double v = 0;
 	double d = init_vs_.d;
 
-	if (path_size)
-	{
-		s = last_s_;
-	}
+	const double speed_limit = std::min(target_speed_, speed_limit_);
 
-	for (int i = n_waypoints_ - (int)path_size; i-- > 0;)
+	if (last_v_ < speed_limit)
+		last_a_ = std::min(max_a_, speed_limit - last_v_);
+	else
+		last_a_ = std::max(-max_a_, speed_limit - last_v_);
+
+	const int n_waypoints = n_waypoints_ - (int)path_size;
+
+	for (int i = n_waypoints; i-- >= 0;)
 	{
-		v += a * delta_t;
-		if (v > max_v_) {
-			v = max_v_;
-			a = 0.;
-		}
-		s += v * delta_t;
+		s = last_s_ + last_v_ * delta_t + last_a_ * delta_t*delta_t / 2.;
+		v = last_v_  + last_a_ * delta_t;
+
+		if (v < speed_limit)
+			last_a_ = std::min(max_a_, speed_limit - v);
+		else
+			last_a_ = std::max(-max_a_, speed_limit - v);
+
+		last_s_ = s;
+		last_v_ = v;
 
 		Point pt = map_.getXY(s, -d);
-		last_s_ = s;
 		next_x_vals_.push_back(pt.x);
 		next_y_vals_.push_back(pt.y);
-
-		last_v_ = v;
-		last_a_ = a;
 
 		cout.setf(std::ios::fixed);
 		cout.precision(2);

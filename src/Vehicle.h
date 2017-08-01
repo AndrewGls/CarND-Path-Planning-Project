@@ -50,7 +50,8 @@ private:
 	double last_s_;					// the last waypoint in trajectory, calculated during previous call
 	double last_v_;					// m/sec
 	double last_a_;					// m/sec^2
-	const double max_v_ = (50. - 2.) * 0.44704; // speed limit in m/s
+	const double speed_limit_ = (50. - 2.) * 0.44704; // speed limit in m/s
+	double target_speed_;			// m/s
 	const double max_a_ = 4; // max car acceleration
 
 	std::vector<double> next_x_vals_;
