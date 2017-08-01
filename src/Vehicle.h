@@ -1,28 +1,9 @@
 #pragma once
 
+#include "Types.h"
 #include <vector>
 
 class HighwayMap;
-
-
-struct CarLocalizationData
-{
-	double x;
-	double y;
-	double s;
-	double d;
-	double yaw;
-	double speed;
-
-	CarLocalizationData(double x = 0, double y = 0, double s = 0, double d = 0, double yaw = 0, double speed = 0)
-	: x(x), y(y), s(s), d(d), yaw(yaw), speed(speed) {}
-};
-
-
-enum FiniteState
-{
-	fs_keep_lane
-};
 
 
 class Vehicle
@@ -30,6 +11,7 @@ class Vehicle
 public:
 	Vehicle(const HighwayMap& map);
 
+	std::vector<SensorFusionData>& getSensorFusionStorage() { return sf_data_; }
 	void getTrajectory(const CarLocalizationData& newState, const std::vector<double>& previous_path_x, const std::vector<double>& previous_path_y);
 
 	std::vector<double>& get_next_x_vals() { return next_x_vals_; }
@@ -41,6 +23,7 @@ private:
 
 private:
 	const HighwayMap& map_;
+	std::vector<SensorFusionData> sf_data_;
 	FiniteState state_;
 	int n_waypoints_; // number of waypoints in predicted trajectory
 

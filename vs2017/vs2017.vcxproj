@@ -37,6 +37,7 @@
     <ClInclude Include="..\src\HighwayMap.h" />
     <ClInclude Include="..\src\json.hpp" />
     <ClInclude Include="..\src\spline.h" />
+    <ClInclude Include="..\src\Types.h" />
     <ClInclude Include="..\src\Utils.hpp" />
     <ClInclude Include="..\src\uWS\Extensions.h" />
     <ClInclude Include="..\src\uWS\Group.h" />
