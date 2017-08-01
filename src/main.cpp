@@ -67,13 +67,13 @@ int main() {
           // j[1] is the data JSON object
           
         	// Main car's localization Data
-			VehicleState vState;
-			vState.x = j[1]["x"];
-			vState.y = j[1]["y"];
-			vState.s = j[1]["s"];
-			vState.d = j[1]["d"];
-			vState.yaw = j[1]["yaw"];
-			vState.speed = j[1]["speed"];
+			CarLocalizationData vLocal;
+			vLocal.x = j[1]["x"];
+			vLocal.y = j[1]["y"];
+			vLocal.s = j[1]["s"];
+			vLocal.d = j[1]["d"];
+			vLocal.yaw = j[1]["yaw"];
+			vLocal.speed = j[1]["speed"];
 
           	// Previous path data given to the Planner
           	auto previous_path_x = j[1]["previous_path_x"];
@@ -87,7 +87,7 @@ int main() {
 
           	json msgJson;
 
-			vehicle.getTrajectory(vState, previous_path_x, previous_path_y);
+			vehicle.getTrajectory(vLocal, previous_path_x, previous_path_y);
 
           	// TODO: define a path made up of (x,y) points that the car will visit sequentially every .02 seconds
 			msgJson["next_x"] = vehicle.get_next_x_vals();
