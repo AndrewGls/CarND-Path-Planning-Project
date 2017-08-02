@@ -9,6 +9,7 @@ using namespace std;
 namespace {
 	static constexpr double delta_t = 20. / 1000.; // 20ms between waypoints
 	static constexpr double buffer_distance = 2;   // m units, distance between vehicles when speed is clise to 0.
+	static constexpr double lane_wide = 4;        // each lane is 4 m wide
 }
 
 
@@ -66,7 +67,7 @@ double Vehicle::braking_distance(double speed) const
 
 
 //////////////////////////////////////////////////////////////////////////////////////////
-double Vehicle::get_max_distance(double speed) const
+double Vehicle::get_min_distance(double speed) const
 {
 	return braking_distance(speed) + buffer_distance;
 }
@@ -125,7 +126,12 @@ void Vehicle::trajectory_KeepLine(const vector<double>& previous_path_x, const v
 #else
 void Vehicle::trajectory_KeepLine(const vector<double>& previous_path_x, const vector<double>& previous_path_y)
 {
-	tc_keep_line_->PredictTrajectory(*this, target_speed_, last_s_, last_v_, last_a_, init_vs_.d, previous_path_x, previous_path_y);
+	TrajectoryController keep_line = *tc_keep_line_;
+
+	keep_line.PredictTrajectory(*this, target_speed_, last_s_, last_v_, last_a_, init_vs_.d, previous_path_x, previous_path_y);
+
+	// save current trajectory
+	*tc_keep_line_ = keep_line;
 	tc_keep_line_->loadTrajectory(*this);
 }
 #endif
@@ -172,6 +178,11 @@ void TrajectoryController::PredictTrajectory (const Vehicle& vehicle,
 		next_y_vals_.push_back(previous_path_y[i]);
 	}
 
+	const SensorFusionData* psfV = detectInFrontBumping(vehicle);
+
+	if (psfV)
+	{
+	}
 
 	double d = init_d;
 	double last_s = 0;
@@ -221,10 +232,54 @@ void TrajectoryController::PredictTrajectory (const Vehicle& vehicle,
 		cout.setf(std::ios::fixed);
 		cout.precision(2);
 
-		cout << "s: " << s << " d: " << d << " (" << pt.x << ", " << pt.y << ")" << std::endl;
+		cout << "s: " << s << " d: " << d << " (" << pt.x << ", " << pt.y << ") ";
+		if (psfV)
+			cout << "Bumping: " << psfV->id;
+		cout << std::endl;
 	}
 }
 
+
+const SensorFusionData* TrajectoryController::detectInFrontBumping(const Vehicle& vehicle) const
+{
+	const vector<SensorFusionData>& sf = vehicle.sensor_fucsion();
+
+	if (sf.empty() || next_s_vals_.empty())
+		return nullptr;
+
+
+	double s = next_s_vals_[0];
+	double d = next_d_vals_[0];
+	double v = next_v_vals_[0];
+
+	vector<SensorFusionData> in_front;
+
+	for (auto it = sf.begin(); it != sf.end(); it++)
+	{
+		if (inTheSameLane(d, it->d) && (it->s > s) && (it->s - s) < vehicle.get_min_distance(v)) {
+			in_front.push_back(*it);
+		}
+	}
+
+	if (in_front.empty())
+		return nullptr;
+
+	// find nearest vehicle
+	size_t index = -1;
+	double min_dist = 1000000000;
+	for (auto it = in_front.begin(); it != in_front.end(); ++it)
+	{
+		auto d = it->s - s;
+		assert(d >= 0);
+		if (d < min_dist) {
+			min_dist = d;
+			index = it - in_front.begin();
+		}
+	}
+	assert(index >= 0);
+
+	return &sf[index];
+}
 
 void TrajectoryController::loadTrajectory(Vehicle& vehicle)
 {

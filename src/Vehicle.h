@@ -23,7 +23,12 @@ public:
 		const std::vector<double>& previous_path_x,
 		const std::vector<double>& previous_path_y);
 
+	const SensorFusionData* detectInFrontBumping(const Vehicle& vehicle) const;
+
 	void loadTrajectory(Vehicle& vehicle);
+
+private:
+	static bool inTheSameLane(double d1, double d2) { return std::fabs(d1 - d2) < 1.5; }
 
 private:
 	int n_waypoints_; // number of waypoints in predicted trajectory
@@ -58,7 +63,7 @@ public:
 	const std::vector<SensorFusionData>& sensor_fucsion() const { return sf_data_; }
 
 	double braking_distance(double speed) const;
-	double get_max_distance(double speed) const;
+	double get_min_distance(double speed) const;
 
 	std::vector<double>& get_next_x_vals() { return next_x_vals_; }
 	std::vector<double>& get_next_y_vals() { return next_y_vals_; }
