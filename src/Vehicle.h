@@ -2,8 +2,46 @@
 
 #include "Types.h"
 #include <vector>
+#include <memory>
 
 class HighwayMap;
+class Vehicle;
+
+
+class TrajectoryController
+{
+public:
+	TrajectoryController();
+
+	void PredictTrajectory(
+		const Vehicle& vehicle,
+		double target_speed,
+		double init_s,
+		double init_v,
+		double init_a,
+		double init_d,
+		const std::vector<double>& previous_path_x,
+		const std::vector<double>& previous_path_y);
+
+	void loadTrajectory(Vehicle& vehicle);
+
+private:
+	int n_waypoints_; // number of waypoints in predicted trajectory
+
+//	double target_speed_;
+
+	double last_s_; // the last waypoint in trajectory, calculated during previous call
+	double last_v_; // m/sec
+	double last_a_; // m/sec^2
+	double last_d_;
+
+	std::vector<double> next_x_vals_;
+	std::vector<double> next_y_vals_;
+
+	std::vector<double> next_s_vals_;
+	std::vector<double> next_d_vals_;
+};
+
 
 
 class Vehicle
@@ -14,8 +52,24 @@ public:
 	std::vector<SensorFusionData>& getSensorFusionStorage() { return sf_data_; }
 	void getTrajectory(const CarLocalizationData& newState, const std::vector<double>& previous_path_x, const std::vector<double>& previous_path_y);
 
+	double speed_limit() const { return speed_limit_; }
+	double target_speed() const { return target_speed_; }
+	double max_acceleration() const { return max_a_; }
+
+	const HighwayMap& get_map() const { return map_; }
+
 	std::vector<double>& get_next_x_vals() { return next_x_vals_; }
 	std::vector<double>& get_next_y_vals() { return next_y_vals_; }
+
+	double last_s() const { return last_s_; }
+	double last_v() const { return last_v_; }
+	double last_a() const { return last_a_; }
+//	double last_d() const { return last_d_; }
+
+	void set_last_s(double v) { last_s_ = v; }
+	void set_last_v(double v) { last_v_ = v; }
+	void set_last_a(double v) { last_a_ = v; }
+//	void last_d() { return last_d_; }
 
 private:
 	void updateState(const CarLocalizationData& newState);
@@ -39,4 +93,8 @@ private:
 
 	std::vector<double> next_x_vals_;
 	std::vector<double> next_y_vals_;
+
+	std::unique_ptr<TrajectoryController> tc_keep_line_;
 };
+
+
