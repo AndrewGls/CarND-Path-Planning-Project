@@ -30,16 +30,14 @@ private:
 
 //	double target_speed_;
 
-	double last_s_; // the last waypoint in trajectory, calculated during previous call
-	double last_v_; // m/sec
-	double last_a_; // m/sec^2
-	double last_d_;
-
 	std::vector<double> next_x_vals_;
 	std::vector<double> next_y_vals_;
 
 	std::vector<double> next_s_vals_;
 	std::vector<double> next_d_vals_;
+
+	std::vector<double> next_v_vals_;
+	std::vector<double> next_a_vals_;
 };
 
 
@@ -57,6 +55,10 @@ public:
 	double max_acceleration() const { return max_a_; }
 
 	const HighwayMap& get_map() const { return map_; }
+	const std::vector<SensorFusionData>& sensor_fucsion() const { return sf_data_; }
+
+	double braking_distance(double speed) const;
+	double get_max_distance(double speed) const;
 
 	std::vector<double>& get_next_x_vals() { return next_x_vals_; }
 	std::vector<double>& get_next_y_vals() { return next_y_vals_; }
@@ -90,6 +92,7 @@ private:
 	const double speed_limit_ = (50. - 2.) * 0.44704; // speed limit in m/s
 	double target_speed_;			// m/s
 	const double max_a_ = 4; // max car acceleration
+	const double mu_ = 0.7;  // coefficient of friction between the road surface and the tires for dry road
 
 	std::vector<double> next_x_vals_;
 	std::vector<double> next_y_vals_;
