@@ -21,9 +21,10 @@
   <ItemGroup>
     <ClCompile Include="..\src\Behavior.cpp" />
     <ClCompile Include="..\src\HighwayMap.cpp" />
+    <ClCompile Include="..\src\LineKeeping.cpp" />
     <ClCompile Include="..\src\main.cpp" />
     <ClCompile Include="..\src\SensorFusion.cpp" />
-    <ClCompile Include="..\src\TrajectoryController.cpp" />
+    <ClCompile Include="..\src\TrajectoryPool.cpp" />
     <ClCompile Include="..\src\Trajectory.cpp" />
     <ClCompile Include="..\src\uWS\Extensions.cpp" />
     <ClCompile Include="..\src\uWS\Group.cpp" />
@@ -41,8 +42,10 @@
     <ClInclude Include="..\src\Behavior.h" />
     <ClInclude Include="..\src\HighwayMap.h" />
     <ClInclude Include="..\src\json.hpp" />
+    <ClInclude Include="..\src\LineKeeping.h" />
     <ClInclude Include="..\src\SensorFusion.h" />
-    <ClInclude Include="..\src\TrajectoryController.h" />
+    <ClInclude Include="..\src\VehicleState.h" />
+    <ClInclude Include="..\src\TrajectoryPool.h" />
     <ClInclude Include="..\src\spline.h" />
     <ClInclude Include="..\src\Trajectory.h" />
     <ClInclude Include="..\src\Types.h" />

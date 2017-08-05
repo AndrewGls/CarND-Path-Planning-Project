@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <memory>
 #include "Eigen-3.3/Eigen/Core"
 
 
@@ -46,3 +47,5 @@ private:
 	Eigen::VectorXd S_coeffs_;   // 6 coeffs of quintic polynomial
 	Eigen::VectorXd D_coeffs_;   // 6 coeffs of quintic polynomial
 };
+
+using TrajectoryPtr = std::shared_ptr<Trajectory>;

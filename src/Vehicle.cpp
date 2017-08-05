@@ -63,7 +63,7 @@ void Vehicle::updateTrajectory(const CarLocalizationData& newState,
 	const double delay_time = nPrevPathSize * delta_t;
 	SensorFusion sensorFusion(sf_data_, delay_time, map_);
 
-	const Trajectory* pTraj = behavior_.generateTrajectory(currStateV6_, currTime_, sensorFusion);
+	TrajectoryPtr pTraj = behavior_.optimalTrajectory(currStateV6_, currTime_, sensorFusion);
 
 
 	double curr_time = currTime_;
@@ -87,7 +87,6 @@ void Vehicle::updateTrajectory(const CarLocalizationData& newState,
 		cout << "** s: " << curr_state(0) << " d: " << curr_state(3) << " (" << pt.x << ", " << pt.y << ") ";
 		cout << "v: " << curr_state(1) << " a: " << curr_state(2);
 		cout << endl;
-
 	}
 }
 
