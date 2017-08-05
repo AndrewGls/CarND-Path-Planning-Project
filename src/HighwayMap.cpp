@@ -3,8 +3,11 @@
 #include <fstream>
 #include <sstream>
 #include <algorithm>
+#include <iostream>
 
 using namespace std;
+
+using Eigen::Vector2d;
 
 HighwayMap::HighwayMap()
 {
@@ -29,7 +32,7 @@ HighwayMap::HighwayMap()
 }
 
 
-Point HighwayMap::getXY(double s, double d) const
+Point HighwayMap::getXYInterpolated(double s, double d) const
 {
 	s = norm_s(s);
 
@@ -39,6 +42,46 @@ Point HighwayMap::getXY(double s, double d) const
 	return pt + nv * d;
 }
 
+
+Vector2d HighwayMap::CalcFrenet(const Point& ptXY, double s_start) const
+{
+	// Gradient descent is used to find the point (s,d) on the spline, which is closest to point ptXY.
+	const double eps = 1.0e-6;
+	const double gamma = 0.001;
+	const double precision = 1e-12;
+	double s = s_start;
+	double prev_step_size = s;
+
+	while (prev_step_size > precision)
+	{
+		const auto prev_s = s;
+		s -= gamma * error_deriv(ptXY, prev_s);
+		prev_step_size = std::abs(s - prev_s);
+	}
+
+	Vector2d p(2);
+	p << ptXY.x, ptXY.y;
+
+	const Vector2d p_spline(x_spline_(s), y_spline_(s));
+//	std::cout << ptXY.x << ", " << ptXY.y << "| " << p_spline << std::endl;
+
+	const Vector2d p_delta = (p - p_spline).array() / get_normal_at(s).array();
+	//std::cout << "p_delta: " << p_delta << std::endl;
+	//std::cout << "normal: " << get_normal_at(s) << std::endl;
+	const double d = 0.5 * (p_delta(0) + p_delta(1));
+	return Vector2d(s, d);
+}
+
+double HighwayMap::error_deriv(const Point& pt, double s) const
+{
+	return -2. * (pt.x - x_spline_(s)) * x_spline_.deriv(1, s)
+		- 2. * (pt.y - y_spline_(s)) * y_spline_.deriv(1, s);
+}
+
+Vector2d HighwayMap::get_normal_at(double s) const
+{
+	return Vector2d(-y_spline_.deriv(1, s), x_spline_.deriv(1, s));
+}
 
 void HighwayMap::fit_spline()
 {

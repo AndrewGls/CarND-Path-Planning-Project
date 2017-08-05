@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Eigen-3.3/Eigen/Core"
+
 struct CarLocalizationData
 {
 	double x;
@@ -28,6 +30,7 @@ struct SensorFusionData
 
 enum FiniteState
 {
+	fs_start,
 	fs_keep_lane
 };
 
