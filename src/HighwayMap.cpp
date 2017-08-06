@@ -86,7 +86,23 @@ Vector2d HighwayMap::get_normal_at(double s) const
 void HighwayMap::fit_spline()
 {
 	// Spline fitting
-	sort(waypoints_.begin(), waypoints_.end(), [](const Waypoint& l, const Waypoint& r) {return l.s < r.s; });
+//	sort(waypoints_.begin(), waypoints_.end(), [](const Waypoint& l, const Waypoint& r) {return l.s < r.s; });
+
+	//------------------------------------
+	// Fix of kink at the end of the track!
+	Waypoint wpF = waypoints_.front();
+	Waypoint wpL = waypoints_.back();
+
+	Waypoint wp1 = wpL;
+	wp1.s -= max_s_;
+
+	Waypoint wp2 = wpF;
+	wp2.s += max_s_;
+
+	waypoints_.insert(waypoints_.begin(), wp1);
+	waypoints_.push_back(wp2);
+	//------------------------------------
+
 
 	vector<double> x, y, s;
 	x.resize(waypoints_.size());

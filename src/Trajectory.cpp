@@ -196,13 +196,17 @@ Eigen::VectorXd Trajectory::calc_s_polynomial_velocity_keeping(const Eigen::Vect
 // Calculate Jerk cost function for evaluated trajectory points as array of vectors like [s, s_d, s_dd, d, d_d, d_dd].
 double Trajectory::jerkCost_SD()
 {
-	return jerkCost_SD (dt_);
+	double maxJs, maxJd;
+	return jerkCost_SD (dt_, maxJs, maxJs);
 }
 
 // Calculate Jerk cost function for evaluated trajectory points as array of vectors like [s, s_d, s_dd, d, d_d, d_dd].
-double Trajectory::jerkCost_SD(double timeStep)
+double Trajectory::jerkCost_SD(double timeStep, double& maxJs, double& maxJd)
 {
 	// See: https://d17h27t6h515a5.cloudfront.net/topher/2017/July/595fd482_werling-optimal-trajectory-generation-for-dynamic-street-scenarios-in-a-frenet-frame/werling-optimal-trajectory-generation-for-dynamic-street-scenarios-in-a-frenet-frame.pdf
+
+	maxJs = -1e10;
+	maxJd = -1e10;
 
 	double Cs = 0;
 	double Cd = 0;
@@ -219,6 +223,9 @@ double Trajectory::jerkCost_SD(double timeStep)
 		const double Jd = calc_polynomial_jerk_at(D_coeffs_, t);
 		Cs += Js*Js;
 		Cd += Jd*Jd;
+
+		maxJs = max(Js, maxJs);
+		maxJd = max(Jd, maxJd);
 	}
 
 	return Ws * Cs + Wd * Cd;

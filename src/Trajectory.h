@@ -44,7 +44,7 @@ public:
 
 	// Calculate Jerk cost function for evaluated trajectory points as array of vectors like [s, s_d, s_dd, d, d_d, d_dd].
 	double jerkCost_SD();
-	double jerkCost_SD(double timeStep);
+	double jerkCost_SD(double timeStep, double& maxJs, double& maxJd);
 
 	std::pair<double, double> MinMaxVelocity_S();
 	std::pair<double, double> MinMaxVelocity_S(double timeStep);

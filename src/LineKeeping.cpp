@@ -50,7 +50,10 @@ TrajectoryPtr LineKeeping::optimalTrajectory( const Eigen::VectorXd& currStateX6
 		{
 			TrajectoryPtr pTraj = Trajectory::VelocityKeeping_STrajectory(currStateX6, v, currTime, T);
 			const double TimeCost = TimeCostW * T;
-			const double JerkCost = JerkCostW * pTraj->jerkCost_SD (timeStep);
+
+			double maxJs, maxJd;
+			double JerkCost = JerkCostW * pTraj->jerkCost_SD (timeStep, maxJs, maxJd);
+
 			const std::pair<double, double>& MinMaxVelocity = pTraj->MinMaxVelocity_S (timeStep);
 			double VelocityCost = std::pow (v - m_SpeedLimit, 2);
 
@@ -58,6 +61,10 @@ TrajectoryPtr LineKeeping::optimalTrajectory( const Eigen::VectorXd& currStateX6
 			if (MinMaxVelocity.first < 0 || MinMaxVelocity.second > m_SpeedLimit)
 			{
 				VelocityCost += 1000;
+			}
+			if (maxJs > m_MaxJerkS)
+			{
+				JerkCost += 1000;
 			}
 
 			pTraj->addCost(JerkCost + TimeCost + VelocityCost);
