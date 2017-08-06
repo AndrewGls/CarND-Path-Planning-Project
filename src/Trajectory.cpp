@@ -13,7 +13,9 @@ using Eigen::Vector3d;
 
 
 Trajectory::Trajectory()
-	: startState_(VectorXd::Zero(6))
+	: timeStart_(0)
+	, duration_(0)
+	, startState_(VectorXd::Zero(6))
 	, endState_(VectorXd::Zero(6))
 	, S_coeffs_(VectorXd::Zero(6))
 	, D_coeffs_(VectorXd::Zero(6))
@@ -21,7 +23,9 @@ Trajectory::Trajectory()
 }
 
 Trajectory::Trajectory(const VectorXd& startStateX6, const VectorXd& endStateX6, double duration, double timeStart)
-	: startState_(startStateX6)
+	: timeStart_(timeStart)
+	, duration_(duration)
+	, startState_(startStateX6)
 	, endState_(endStateX6)
 	, S_coeffs_(VectorXd::Zero(6))
 	, D_coeffs_(VectorXd::Zero(6))

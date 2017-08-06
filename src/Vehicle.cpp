@@ -64,7 +64,7 @@ void Vehicle::updateTrajectory(const CarLocalizationData& newState,
 	}
 
 	// Predict position of vehicles after delay-time:
-	const double delayTime = nPrevPathSize * delta_t;
+	const double delayTime = nPrevPredictionPathSize * delta_t;
 	SensorFusion sensorFusion(sf_data_, delayTime, map_);
 
 	TrajectoryPtr pTraj = behavior_.optimalTrajectory(currStateV6_, currTime_, sensorFusion);
