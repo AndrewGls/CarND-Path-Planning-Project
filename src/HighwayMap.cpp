@@ -88,6 +88,7 @@ void HighwayMap::fit_spline()
 	// Spline fitting
 //	sort(waypoints_.begin(), waypoints_.end(), [](const Waypoint& l, const Waypoint& r) {return l.s < r.s; });
 
+#if 1
 	//------------------------------------
 	// Fix of kink at the end of the track!
 	Waypoint wpF = waypoints_.front();
