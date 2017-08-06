@@ -12,7 +12,7 @@ using Eigen::Vector2d;
 using namespace std;
 
 namespace {
-	static constexpr double delta_t = 20. / 1000.; // 20ms between waypoints
+//	static constexpr double delta_t = 20. / 1000.; // 20ms between waypoints
 	static constexpr double buffer_distance = 2;   // m units, distance between vehicles when speed is clise to 0.
 	static constexpr double lane_wide = 4;        // each lane is 4 m wide
 }
@@ -40,6 +40,9 @@ void Vehicle::updateTrajectory(const CarLocalizationData& newState,
 	const int nPredictionPathSize = int(predictionHorizont_ * 1000) / 20;
 	const int nReactivePathSize = int(reactiveHorizont_ * 1000) / 20;
 
+	next_x_vals_.clear();
+	next_y_vals_.clear();
+
 	if (!initDone_)
 	{
 		// first time/reset
@@ -65,6 +68,7 @@ void Vehicle::updateTrajectory(const CarLocalizationData& newState,
 
 	TrajectoryPtr pTraj = behavior_.optimalTrajectory(currStateV6_, currTime_, sensorFusion);
 
+	cout << "------- Driving path ----------" << endl;
 
 	double curr_time = currTime_;
 	Eigen::VectorXd curr_state = currStateV6_;
@@ -84,8 +88,11 @@ void Vehicle::updateTrajectory(const CarLocalizationData& newState,
 		next_x_vals_.push_back(pt.x);
 		next_y_vals_.push_back(pt.y);
 
-		cout << "** s: " << curr_state(0) << " d: " << curr_state(3) << " (" << pt.x << ", " << pt.y << ") ";
-		cout << "v: " << curr_state(1) << " a: " << curr_state(2);
+		cout << "s: " << curr_state(0)
+			<< " d: " << curr_state(3)
+			<< " (" << pt.x << ", " << pt.y << ") "
+			<< " v: " << curr_state(1)
+			<< " a: " << curr_state(2);
 		cout << endl;
 	}
 }

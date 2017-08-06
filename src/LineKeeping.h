@@ -12,4 +12,8 @@ public:
 											double currTime,
 											const SensorFusion& sensFusion) override;
 
+private:
+	static constexpr double JerkCostW = 0.01;
+	static constexpr double VelocityCostW = 1.;
+	static constexpr double TimeCostW = 100;
 };

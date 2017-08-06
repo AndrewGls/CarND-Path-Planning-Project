@@ -1,6 +1,7 @@
 #include <iostream>
 #include "Trajectory.h"
-#include "Eigen-3.3/Eigen/Eigen"
+#include <assert.h>
+#include <limits>
 
 using namespace std;
 
@@ -10,27 +11,37 @@ using Eigen::Vector3d;
 
 
 Trajectory::Trajectory()
-	: timeStart_(0)
-	, duration_(0)
-	, cost_(0)
-	, startState_(VectorXd::Zero(6))
-	, endState_(VectorXd::Zero(6))
+	: startState_(VectorXd::Zero(6))
+//	, endState_(VectorXd::Zero(6))
 	, S_coeffs_(VectorXd::Zero(6))
 	, D_coeffs_(VectorXd::Zero(6))
 {
 }
 
 Trajectory::Trajectory(const VectorXd& startStateX6, const VectorXd& endStateX6, double duration, double timeStart)
-	: timeStart_(timeStart)
-	, duration_(duration)
-	, cost_(0)
-	, startState_(startStateX6)
-	, endState_(endStateX6)
+	: startState_(startStateX6)
+//	, endState_(endStateX6)
 	, S_coeffs_(VectorXd::Zero(6))
 	, D_coeffs_(VectorXd::Zero(6))
 {
 	S_coeffs_ = CalcQuinticPolynomialCoeffs(startStateX6.head(3), endStateX6.head(3), duration_);
 	D_coeffs_ = CalcQuinticPolynomialCoeffs(startStateX6.segment(3,3), endStateX6.segment(3,3), duration_);
+}
+
+
+TrajectoryPtr Trajectory::VelocityKeeping_STrajectory(const VectorXd& currStateX6, double targetVelocity, double currTime, double timeDuration)
+{
+	TrajectoryPtr pTraj = std::make_shared<Trajectory>();
+	pTraj->startState_ = currStateX6;
+	pTraj->timeStart_ = currTime;
+	pTraj->duration_ = timeDuration;
+
+	pTraj->S_coeffs_ = calc_s_polynomial_velocity_keeping(currStateX6.head(3), targetVelocity, timeDuration);
+	pTraj->D_coeffs_(0) = currStateX6(3); // saves D position on the road.
+
+	pTraj->DE_V = targetVelocity;
+
+	return pTraj;
 }
 
 
@@ -47,6 +58,20 @@ vector<VectorXd> Trajectory::getTrajectorySDPoints(double dt)
 	}
 
 	return traj;
+}
+
+
+void Trajectory::getTrajectorySDPointsTo(vector<Eigen::VectorXd>& outPoints, double dt)
+{
+	VectorXd state = VectorXd::Zero(6);
+	size_t nIndex = 0;
+
+	for (double t = 0; t < duration_; t += dt)
+	{
+		// calculate [s, s_d, s_dd] and [d, d_d, d_dd] at time 't'
+		state << calc_polynomial_at(S_coeffs_, t), calc_polynomial_at(D_coeffs_, t);
+		outPoints[nIndex] = state;
+	}
 }
 
 
@@ -141,4 +166,82 @@ VectorXd Trajectory::calc_polynomial_at(const VectorXd& coeffsX6, double t)
 //	std::cout << state << std::endl;
 
 	return state;
+}
+
+
+Eigen::VectorXd Trajectory::calc_s_polynomial_velocity_keeping(const Eigen::VectorXd& startStateV3, double targetVelocity, double T)
+{
+	// Calculate 6 coeffs [a1, a2, a3, a4, a5] with constraints: a4=0 and a5 = 0.
+
+	const double T2 = T * T;
+	const double T3 = T2 * T;
+
+	MatrixXd A(2, 2);
+	A << 3*T2, 4*T3, 6*T, 12*T2;
+
+	VectorXd b(2);
+	b << targetVelocity - startStateV3(1) - startStateV3(2) * T, 0. - startStateV3(2);
+
+	Eigen::Vector2d x = A.colPivHouseholderQr().solve(b);
+	//std::cout << "x: " << x << std::endl;
+	assert(x(0) == x(0));
+	assert(x(1) == x(1));
+
+	VectorXd S_Coeffs(6);
+	S_Coeffs << startStateV3(0), startStateV3(1), 0.5 * startStateV3(2), x, 0.;
+	return S_Coeffs;
+}
+
+
+// Calculate Jerk cost function for evaluated trajectory points as array of vectors like [s, s_d, s_dd, d, d_d, d_dd].
+double Trajectory::jerkCost_SD()
+{
+	return jerkCost_SD (dt_);
+}
+
+// Calculate Jerk cost function for evaluated trajectory points as array of vectors like [s, s_d, s_dd, d, d_d, d_dd].
+double Trajectory::jerkCost_SD(double timeStep)
+{
+	// See: https://d17h27t6h515a5.cloudfront.net/topher/2017/July/595fd482_werling-optimal-trajectory-generation-for-dynamic-street-scenarios-in-a-frenet-frame/werling-optimal-trajectory-generation-for-dynamic-street-scenarios-in-a-frenet-frame.pdf
+
+	double Cs = 0;
+	double Cd = 0;
+
+	// Topic VIII. EXPERIMENTS: With the cost weights klat close to klon, the car always drives wellbehaved right behind the leading car(not shown),
+	// so, for the sake of clearness, we used klat << klon.
+
+	const double Ws = 1.;
+	const double Wd = 2.;
+
+	for (double t = 0; t < duration_; t += dt_)
+	{
+		const double Js = calc_polynomial_jerk_at(S_coeffs_, t);
+		const double Jd = calc_polynomial_jerk_at(D_coeffs_, t);
+		Cs += Js*Js;
+		Cd += Jd*Jd;
+	}
+
+	return Ws * Cs + Wd * Cd;
+}
+
+std::pair<double, double> Trajectory::MinMaxVelocity_S()
+{
+	return MinMaxVelocity_S(dt_);
+}
+
+std::pair<double, double> Trajectory::MinMaxVelocity_S (double timeStep)
+{
+	std::pair<double, double> minMax(
+		1e10,// std::numeric_limits<double>::max(),
+		-1e10//std::numeric_limits<double>::min()
+	);
+
+	for (double t = 0; t < duration_; t += dt_)
+	{
+		const double v = calc_polynomial_velocity_at(S_coeffs_, t);
+		minMax.first = std::min(v, minMax.first);
+		minMax.second = std::max(v, minMax.second);
+	}
+
+	return minMax;
 }

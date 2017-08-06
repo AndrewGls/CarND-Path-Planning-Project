@@ -1,6 +1,12 @@
 #pragma once
 
+#include "Eigen-3.3/Eigen/Eigen"
 #include "Eigen-3.3/Eigen/Core"
+#include <limits>
+
+
+static constexpr double delta_t = 20. / 1000.; // 20ms between waypoints
+
 
 struct CarLocalizationData
 {

@@ -1,5 +1,8 @@
-#include "LineKeeping.h"
+﻿#include "LineKeeping.h"
 #include "Types.h"
+#include "TrajectoryPool.h"
+#include <iostream>
+
 
 using namespace std;
 
@@ -20,83 +23,71 @@ TrajectoryPtr LineKeeping::optimalTrajectory( const Eigen::VectorXd& currStateX6
 											  double currTime,
 											  const SensorFusion& sensFusion )
 {
-	double T = 30;
+	// https://d17h27t6h515a5.cloudfront.net/topher/2017/July/595fd482_werling-optimal-trajectory-generation-for-dynamic-street-scenarios-in-a-frenet-frame/werling-optimal-trajectory-generation-for-dynamic-street-scenarios-in-a-frenet-frame.pdf
 
-	double s_i = currStateX6(0);
-	double v_i = currStateX6(1);
-	double a_i = currStateX6(2);
-	double d_i = currStateX6(3);
+	// Start state: [s0, s0_d, s0_dd] at t0
+	// End state:   [s1_d, s1_dd] at t1 = t0 + T
+	// st_d = target velocity.
+	// Task: generate optimal longitudinal trajectory set of quartic polynomials by
+	// varying the end constraints by ∆s_d[i] and T[j] according to: [ s1_d, s1+dd, T][ij] = [[st_d + ∆s_d[i]], 0, T[j] ]
 
-	double s_f = s_i + 50;
-	double v_f = 20;
-	double a_f = 0;
-	double d_f = d_i;
+	const double currS = currStateX6(0);
+	const double currVelosity = currStateX6(1);
+	const double D0 = saferyDistance(currVelosity);
 
-	VectorXd endStateX6(6);
-	endStateX6 << s_f, v_f, a_f, d_i, 0, 0;
+	constexpr double velocity_step = 1; // m/s
+	constexpr double T_step = 1;		// s
+	constexpr double maxT = 10;			// s
 
-	TrajectoryPtr traj = std::make_shared<Trajectory>(currStateX6, endStateX6, T, currTime);
+	const double timeStep = m_delta_t;  // time step, used to calculate trajectory cost function.
 
-	return traj;
+	TrajectoryPtr pOptimalTraj;
+	TrajectoryPool pool;
 
-#if 0
-	double T = 30;
+	for (double v = 0; v < m_SpeedLimit; v += velocity_step)
+	{
+		for (double T = 1; T < maxT; T += T_step)
+		{
+			TrajectoryPtr pTraj = Trajectory::VelocityKeeping_STrajectory(currStateX6, v, currTime, T);
+			const double TimeCost = TimeCostW * T;
+			const double JerkCost = JerkCostW * pTraj->jerkCost_SD (timeStep);
+			const std::pair<double, double>& MinMaxVelocity = pTraj->MinMaxVelocity_S (timeStep);
+			double VelocityCost = std::pow (v - m_SpeedLimit, 2);
 
-	VectorXd s_state(6);
-	VectorXd f_state(6);
-	s_state << 125, 0, 0, -6, 0, 0;
-	f_state << 125 + 50, 20, 0, -6, 0, 0;
-	control_.generateOptimalTrajectory(s_state, f_state, T, currTime);
+			// Penalize invalid trajectories!
+			if (MinMaxVelocity.first < 0 || MinMaxVelocity.second > m_SpeedLimit)
+			{
+				VelocityCost += 1000;
+			}
 
+			pTraj->addCost(JerkCost + TimeCost + VelocityCost);
 
-	/*	double s_i = currStateX6(0);
-	double v_i = currStateX6(1);
-	double a_i = currStateX6(2);
-	double d_i = currStateX6(3);
+			cout << "s: " << currStateX6(0)
+				//<< " d: " << currStateX6(3)
+				<< " v: " << v
+				<< " T: " << T
+				<< " Jc: " << JerkCost
+				<< " Vc: " << VelocityCost
+				<< " Tc: " << TimeCost
+				<< " C: " << pTraj->getCost()
+				<< " Vmin: " << MinMaxVelocity.first
+				<< " Vmax: " << MinMaxVelocity.second
+				<< endl;
 
-	double s_f = s_i + 50;
-	double v_f = 20;
-	double a_f = 0;
-	double d_f = d_i;
+			pool.add(pTraj);
+		}
+	}
 
-	VectorXd finalStateX6(6);
-	finalStateX6 << s_f, v_f, a_f, d_i, 0, 0;
+	pOptimalTraj = pool.optimalTrajectory();
 
-	control_.generateOptimalTrajectory(currStateX6, finalStateX6, T, currTime);
-	*/
-	Eigen::VectorXd stateI = control_.getOptimalTragectory()->evalaluateStateAt(0);
-	Eigen::VectorXd stateF = control_.getOptimalTragectory()->evalaluateStateAt(T);
-	Eigen::VectorXd state02 = control_.getOptimalTragectory()->evalaluateStateAt(0.02);
-	Eigen::VectorXd state08 = control_.getOptimalTragectory()->evalaluateStateAt(T - 0.02);
-	Eigen::VectorXd state05 = control_.getOptimalTragectory()->evalaluateStateAt(T / 2);
+	cout << "------- Best ----------" << endl;
+	cout << "s: " << currStateX6(0)
+		//<< " d: " << currStateX6(3)
+		<< " v: " << pOptimalTraj->DE_V
+		<< " T: " << pOptimalTraj->getDuration()
+		<< endl;
 
-	std::cout << stateI(0) << ", ";
-	std::cout << stateI(1) << ", ";
-	std::cout << stateI(2);
-	std::cout << std::endl;
-
-	std::cout << stateF(0) << ", ";
-	std::cout << stateF(1) << ", ";
-	std::cout << stateF(2);
-	std::cout << std::endl;
-
-	std::cout << state02(0) << ", ";
-	std::cout << state02(1) << ", ";
-	std::cout << state02(2);
-	std::cout << std::endl;
-
-	std::cout << state08(0) << ", ";
-	std::cout << state08(1) << ", ";
-	std::cout << state08(2);
-	std::cout << std::endl;
-
-	std::cout << state05(0) << ", ";
-	std::cout << state05(1) << ", ";
-	std::cout << state05(2);
-	std::cout << std::endl;
-
-	return control_.getOptimalTragectory();
-#endif 
+	return pOptimalTraj;
 }
 
 
