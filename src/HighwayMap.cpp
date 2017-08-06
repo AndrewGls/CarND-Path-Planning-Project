@@ -102,6 +102,7 @@ void HighwayMap::fit_spline()
 	waypoints_.insert(waypoints_.begin(), wp1);
 	waypoints_.push_back(wp2);
 	//------------------------------------
+#endif
 
 
 	vector<double> x, y, s;

@@ -15,13 +15,25 @@ namespace Utils
 {
 	// For converting back and forth between radians and degrees.
 	constexpr double pi() { return M_PI; }
-	double deg2rad(double x) { return x * pi() / 180; }
-	double rad2deg(double x) { return x * 180 / pi(); }
+	inline double deg2rad(double x) { return x * pi() / 180; }
+	inline double rad2deg(double x) { return x * 180 / pi(); }
 
 
-	double distance(double x1, double y1, double x2, double y2)
+	inline double distance(double x1, double y1, double x2, double y2)
 	{
 		return sqrt((x2 - x1)*(x2 - x1) + (y2 - y1)*(y2 - y1));
+	}
+
+	// Returns lane number -1, 0, 1, 2 for specified d coord. in Frenet frame.
+	inline int GetLaneNumberFor(double d)
+	{
+		if (d > 0 || d < -12)
+			return -1; // outside of right-driving road.
+		if (d < -8)
+			return 0;
+		else if (d < -4)
+			return 1;
+		return 2;
 	}
 
 

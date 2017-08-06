@@ -62,13 +62,15 @@ void Vehicle::updateTrajectory(const CarLocalizationData& newState,
 		next_y_vals_.push_back(previous_path_y[i]);
 	}
 
-	// Correct state of vehicles has changed during delay_time time.
-	const double delay_time = nPrevPathSize * delta_t;
-	SensorFusion sensorFusion(sf_data_, delay_time, map_);
+	// Predict position of vehicles after delay-time:
+	const double delayTime = nPrevPathSize * delta_t;
+	SensorFusion sensorFusion(sf_data_, delayTime, map_);
 
 	TrajectoryPtr pTraj = behavior_.optimalTrajectory(currStateV6_, currTime_, sensorFusion);
 
+#ifdef VERBOSE_NEXT_XY
 	cout << "------- Driving path ----------" << endl;
+#endif
 
 	double curr_time = currTime_;
 	Eigen::VectorXd curr_state = currStateV6_;
@@ -88,12 +90,14 @@ void Vehicle::updateTrajectory(const CarLocalizationData& newState,
 		next_x_vals_.push_back(pt.x);
 		next_y_vals_.push_back(pt.y);
 
+#ifdef VERBOSE_NEXT_XY
 		cout << "s: " << curr_state(0)
 			<< " d: " << curr_state(3)
 			<< " (" << pt.x << ", " << pt.y << ") "
 			<< " v: " << curr_state(1)
 			<< " a: " << curr_state(2);
 		cout << endl;
+#endif // VERBOSE_NEXT_XY
 	}
 }
 

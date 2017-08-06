@@ -173,6 +173,23 @@ Eigen::VectorXd Trajectory::calc_s_polynomial_velocity_keeping(const Eigen::Vect
 {
 	// Calculate 6 coeffs [a1, a2, a3, a4, a5] with constraints: a4=0 and a5 = 0.
 
+	// Using constraints:  start [S_0, S_d, S_dd]
+	//                       end [S_f_target_d, S_f_dd=0, T_f]
+	//   and 
+	//
+	// s(t) = s0 + s0_d * t + 0.5 * s0_dd * t^2 + a3 * t^3 + a4 * t^4 + a5 * t^5
+	// s_d(t) = s0_d + s0_dd * t + 3*a3 * t^2 + 4*a4 * t^3 + 5*a5 * t^4
+	// s_dd(t) = s0_dd + 6*a3 * t^1 + 12*a4 * t^2 + 20*a5 * t^3
+	
+
+	// S_0_d + S_0_dd*T + 3*a3*T^2 + 4*a4*T^3 = S_target_d
+	// S_0_dd + 6*a3*T + 12*a4*T^2 = 0
+
+	//  | 3T^2  4T^3 |   | a3 |   | S_f_target_d - (S_0_d + S_0_dd * T) |
+	//  |            | x |    | = |                                     |
+	//  | 6T   12T^2 |   | a4 |   | -S_0_dd                             |
+
+
 	const double T2 = T * T;
 	const double T3 = T2 * T;
 

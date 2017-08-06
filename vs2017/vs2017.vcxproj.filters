@@ -146,5 +146,11 @@
     <ClInclude Include="..\src\VehicleState.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\OtherVehicle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\catch.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

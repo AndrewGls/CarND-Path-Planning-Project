@@ -41,6 +41,8 @@ TrajectoryPtr LineKeeping::optimalTrajectory( const Eigen::VectorXd& currStateX6
 
 	const double timeStep = m_delta_t;  // time step, used to calculate trajectory cost function.
 
+	const auto leadingVehicles = sensFusion.getLeadingVehiclesInLane (currStateX6);
+
 	TrajectoryPtr pOptimalTraj;
 	TrajectoryPool pool;
 
@@ -69,6 +71,7 @@ TrajectoryPtr LineKeeping::optimalTrajectory( const Eigen::VectorXd& currStateX6
 
 			pTraj->addCost(JerkCost + TimeCost + VelocityCost);
 
+#ifdef VERBOSE_LINE_KEEPING
 			cout << "s: " << currStateX6(0)
 				//<< " d: " << currStateX6(3)
 				<< " v: " << v
@@ -80,6 +83,7 @@ TrajectoryPtr LineKeeping::optimalTrajectory( const Eigen::VectorXd& currStateX6
 				<< " Vmin: " << MinMaxVelocity.first
 				<< " Vmax: " << MinMaxVelocity.second
 				<< endl;
+#endif // VERBOSE_LINE_KEEPING
 
 			pool.add(pTraj);
 		}
@@ -87,12 +91,14 @@ TrajectoryPtr LineKeeping::optimalTrajectory( const Eigen::VectorXd& currStateX6
 
 	pOptimalTraj = pool.optimalTrajectory();
 
+#ifdef VERBOSE_LINE_KEEPING
 	cout << "------- Best ----------" << endl;
 	cout << "s: " << currStateX6(0)
 		//<< " d: " << currStateX6(3)
 		<< " v: " << pOptimalTraj->DE_V
 		<< " T: " << pOptimalTraj->getDuration()
 		<< endl;
+#endif // #ifdef VERBOSE_LINE_KEEPING
 
 	return pOptimalTraj;
 }

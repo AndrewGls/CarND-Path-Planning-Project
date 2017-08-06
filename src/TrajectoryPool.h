@@ -29,7 +29,7 @@ private:
 inline TrajectoryPtr TrajectoryPool::optimalTrajectory() const
 {
 	TrajectoryPtr pTraj;
-	double minCost = std::numeric_limits<double>::max();
+	double minCost = 1e10;// std::numeric_limits<double>::max();
 
 	for (auto it = m_pool.cbegin(); it != m_pool.cend(); ++it)
 	{

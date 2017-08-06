@@ -40,9 +40,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\Behavior.h" />
+    <ClInclude Include="..\src\catch.hpp" />
     <ClInclude Include="..\src\HighwayMap.h" />
     <ClInclude Include="..\src\json.hpp" />
     <ClInclude Include="..\src\LineKeeping.h" />
+    <ClInclude Include="..\src\OtherVehicle.h" />
     <ClInclude Include="..\src\SensorFusion.h" />
     <ClInclude Include="..\src\VehicleState.h" />
     <ClInclude Include="..\src\TrajectoryPool.h" />

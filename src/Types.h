@@ -4,6 +4,12 @@
 #include "Eigen-3.3/Eigen/Core"
 #include <limits>
 
+//#define VERBOSE_NEXT_XY
+//#define VERBOSE_LINE_KEEPING
+//#define VERBOSE_OTHER_CARS_CHECK_TRANSFORM
+#define VERBOSE_OTHER_LEADING_CARS
+//#define VERBOSE_OTHER_IGNORED_CARS
+
 
 static constexpr double delta_t = 20. / 1000.; // 20ms between waypoints
 
