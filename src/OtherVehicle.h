@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Utils.hpp"
+#include "Trajectory.h"
 
 class OtherVehicle
 {
@@ -18,6 +19,8 @@ public:
 	int    get_lane() const { return Utils::GetLaneNumberFor(m_d); }
 	bool   isInlane (int lane) const { return lane == get_lane() && lane != -1;  }
 
+	TrajectoryPtr PredictedTrajectory (double currTime, double timeDuration) const;
+
 private:
 	int m_id;
 	double m_x;
@@ -29,7 +32,10 @@ private:
 
 
 //---------------------------------------------------------------------------------------
-inline OtherVehicle::OtherVehicle(int id , double x, double y, double v, double s, double d)
+//---------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------
+
+inline OtherVehicle::OtherVehicle (int id , double x, double y, double v, double s, double d)
 	: m_id(id)
 	, m_x(x)
 	, m_y(y)
@@ -37,5 +43,10 @@ inline OtherVehicle::OtherVehicle(int id , double x, double y, double v, double 
 	, m_s(s)
 	, m_d(d)
 {
+}
 
+//---------------------------------------------------------------------------------------
+inline TrajectoryPtr OtherVehicle::PredictedTrajectory (double currTime, double timeDuration) const
+{
+	return Trajectory::ConstartVelocity_STrajectory (m_s, m_d, m_v, currTime, timeDuration);
 }

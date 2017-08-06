@@ -4,6 +4,7 @@
 #include <vector>
 #include <memory>
 #include <utility>
+#include <cmath>
 
 
 class Trajectory;
@@ -26,12 +27,21 @@ public:
 	// https://d17h27t6h515a5.cloudfront.net/topher/2017/July/595fd482_werling-optimal-trajectory-generation-for-dynamic-street-scenarios-in-a-frenet-frame/werling-optimal-trajectory-generation-for-dynamic-street-scenarios-in-a-frenet-frame.pdf
 	static TrajectoryPtr VelocityKeeping_STrajectory (const Eigen::VectorXd& currStateX6, double targetVelocity, double currTime, double timeDuration);
 
+	// Used for prediction position other vehicles: constant velocity model without changing lane is used for small time delays.
+	static TrajectoryPtr ConstartVelocity_STrajectory(double currS, double currD, double currVelosity, double currTime, double timeDuration);
+
 	// Returns array of vectors with time step, where each vector is sd-point [s, s_d, s_dd, d, d_d, d_dd]
 	std::vector<Eigen::VectorXd> getTrajectorySDPoints (double dt);
 	void getTrajectorySDPointsTo (std::vector<Eigen::VectorXd>& outPoints, double dt);
 
 	// Returns vector state [s, s_d, s_dd, d, d_d, d_dd] at the time 'time'.
 	Eigen::VectorXd evalaluateStateAt(double time) const;
+
+	// Calculates minimum distance to specified trajectory.
+	// Returns pair like { min-distance, time }.
+	std::pair<double, double> CalcMinDistanceToTrajectory(const TrajectoryPtr otheTraj, double timeStep = delta_t) const;
+	
+	double CalcSaferyDistanceCost(const TrajectoryPtr otheTraj, double timeStep = 0.1) const;
 
 	// Returns trajectory duration in seconds.
 	double getDuration() const { return duration_; }
@@ -67,6 +77,7 @@ private:
 	inline double calc_polynomial_jerk_at (const Eigen::VectorXd& coeffsX6, double t) const;
 	inline double calc_polynomial_velocity_at (const Eigen::VectorXd& coeffsX6, double t) const;
 
+	inline double SafetyDistanceCost_forS(double distance, double velocity) const;
 
 	// Calculate Jerk optimal polynomial for S-trajectory with keeping velocity, using current S start-state [s, s_d, s_dd], 
 	// target velocity m/s and specified duration T in sec.
@@ -80,7 +91,7 @@ private:
 	double dt_ = delta_t;	// time step along a trajectory
 
 	Eigen::VectorXd startState_; // [s, s_dot, s_ddot, d, d_dot, d_ddot]
-//	Eigen::VectorXd endState_;   // [s, s_dot, s_ddot, d, d_dot, d_ddot]
+	Eigen::VectorXd endState_;   // [s, s_dot, s_ddot, d, d_dot, d_ddot]
 	Eigen::VectorXd S_coeffs_;   // 6 coeffs of quintic polynomial
 	Eigen::VectorXd D_coeffs_;   // 6 coeffs of quintic polynomial
 
@@ -119,5 +130,26 @@ inline double Trajectory::calc_polynomial_velocity_at(const Eigen::VectorXd& a, 
 
 	// calculate s_d(t)
 	return a(1) + 2 * a(2) * t + 3 * a(3) * t2 + 4 * a(4) * t3 + 5 * a(5) * t4;
+}
+
+inline double __braking_distance(double speed)
+{
+	static constexpr double mu = 1.;//0.7;
+	static constexpr double g = 9.8; // g is the gravity of Earth
+	return speed*speed / (2 * mu * g);
+}
+
+
+inline double logistic(double x)
+{
+	return 2. / (1 + exp(-x)) - 1.;
+}
+
+inline double Trajectory::SafetyDistanceCost_forS(double distance, double velocity) const
+{
+//	const double safetyDistance = __braking_distance(velocity);
+//	return 1. * logistic(safetyDistance / distance);
+
+	return 0;
 }
 

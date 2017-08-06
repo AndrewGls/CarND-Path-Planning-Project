@@ -1,7 +1,9 @@
 #include <iostream>
 #include "Trajectory.h"
+#include "Utils.hpp"
 #include <assert.h>
 #include <limits>
+
 
 using namespace std;
 
@@ -12,7 +14,7 @@ using Eigen::Vector3d;
 
 Trajectory::Trajectory()
 	: startState_(VectorXd::Zero(6))
-//	, endState_(VectorXd::Zero(6))
+	, endState_(VectorXd::Zero(6))
 	, S_coeffs_(VectorXd::Zero(6))
 	, D_coeffs_(VectorXd::Zero(6))
 {
@@ -20,7 +22,7 @@ Trajectory::Trajectory()
 
 Trajectory::Trajectory(const VectorXd& startStateX6, const VectorXd& endStateX6, double duration, double timeStart)
 	: startState_(startStateX6)
-//	, endState_(endStateX6)
+	, endState_(endStateX6)
 	, S_coeffs_(VectorXd::Zero(6))
 	, D_coeffs_(VectorXd::Zero(6))
 {
@@ -40,6 +42,28 @@ TrajectoryPtr Trajectory::VelocityKeeping_STrajectory(const VectorXd& currStateX
 	pTraj->D_coeffs_(0) = currStateX6(3); // saves D position on the road.
 
 	pTraj->DE_V = targetVelocity;
+
+	return pTraj;
+}
+
+
+// Used for prediction position other vehicles: constant velocity model without changing lane is used for small time delays.
+TrajectoryPtr Trajectory::ConstartVelocity_STrajectory(double currS, double currD, double currVelosity, double currTime, double timeDuration)
+{
+	// Constant velosity trajectory with saving without shanging lane:
+	//  Start state: [s, s_d, 0, d, 0, 0] 
+	//  End state:   [s+s_d*T, s_d, 0, d, 0, 0]
+
+	TrajectoryPtr pTraj = std::make_shared<Trajectory>();
+
+	pTraj->startState_ << currS, currVelosity, 0, currD, 0, 0;
+	pTraj->endState_ << currS + currVelosity * timeDuration, currVelosity, 0, currD, 0, 0;
+
+	pTraj->S_coeffs_ << currS, currVelosity, 0, 0, 0, 0;
+	pTraj->D_coeffs_ << currD, 0, 0, 0, 0, 0;
+
+	pTraj->timeStart_ = currTime;
+	pTraj->duration_ = timeDuration;
 
 	return pTraj;
 }
@@ -77,21 +101,17 @@ void Trajectory::getTrajectorySDPointsTo(vector<Eigen::VectorXd>& outPoints, dou
 
 VectorXd Trajectory::evalaluateStateAt(double time) const
 {
-//	assert(mIsFinalized);
-
-	if (time > timeStart_ + duration_)
-	{
-		VectorXd state = evalaluateStateAt(S_coeffs_, D_coeffs_, duration_);
-		VectorXd speedVector = VectorXd::Zero(6);
-		speedVector(0) = state(1);
-		speedVector(3) = state(4);
-		state += (time - timeStart_ - duration_) * speedVector;
-		return state;
-	}
-	else
+	if (time <= timeStart_ + duration_)
 	{
 		return evalaluateStateAt(S_coeffs_, D_coeffs_, time - timeStart_);
 	}
+
+	VectorXd state = evalaluateStateAt(S_coeffs_, D_coeffs_, duration_);
+	VectorXd speedVector = VectorXd::Zero(6);
+	speedVector(0) = state(1);
+	speedVector(3) = state(4);
+	state += (time - timeStart_ - duration_) * speedVector;
+	return state;
 }
 
 
@@ -222,8 +242,8 @@ double Trajectory::jerkCost_SD(double timeStep, double& maxJs, double& maxJd)
 {
 	// See: https://d17h27t6h515a5.cloudfront.net/topher/2017/July/595fd482_werling-optimal-trajectory-generation-for-dynamic-street-scenarios-in-a-frenet-frame/werling-optimal-trajectory-generation-for-dynamic-street-scenarios-in-a-frenet-frame.pdf
 
-	maxJs = -1e10;
-	maxJd = -1e10;
+	maxJs = MinDoubleVal;
+	maxJd = MinDoubleVal;
 
 	double Cs = 0;
 	double Cd = 0;
@@ -256,8 +276,8 @@ std::pair<double, double> Trajectory::MinMaxVelocity_S()
 std::pair<double, double> Trajectory::MinMaxVelocity_S (double timeStep)
 {
 	std::pair<double, double> minMax(
-		1e10,// std::numeric_limits<double>::max(),
-		-1e10//std::numeric_limits<double>::min()
+		MaxDoubleVal,// std::numeric_limits<double>::max(),
+		MinDoubleVal//std::numeric_limits<double>::min()
 	);
 
 	for (double t = 0; t < duration_; t += dt_)
@@ -268,4 +288,50 @@ std::pair<double, double> Trajectory::MinMaxVelocity_S (double timeStep)
 	}
 
 	return minMax;
+}
+
+
+// Calculates minimum distance to specified trajectory.
+// Returns pair like { min-distance, time }.
+std::pair<double, double> Trajectory::CalcMinDistanceToTrajectory(const TrajectoryPtr trajectory, double timeStep/* = delta_t*/) const
+{
+	double minDist = MaxDoubleVal;
+	double minDistTime = 0;
+
+	const double timeEnd = timeStart_ + duration_;
+
+	for (double t = timeStart_; t < timeEnd; t += timeStep)
+	{
+		VectorXd s1 = evalaluateStateAt(t);
+		VectorXd s2 = trajectory->evalaluateStateAt(t);
+		const double dist = Utils::distance(s1(0), s1(3), s2(0), s2(3));
+		if (dist < minDist)
+		{
+			minDist = dist;
+			minDistTime = t;
+		}
+	}
+
+	return std::pair<double, double>(minDist, minDistTime);
+}
+
+
+double Trajectory::CalcSaferyDistanceCost(const TrajectoryPtr otheTraj, double timeStep) const
+{
+	double Cost = 0;
+	const double timeHorizon = 10;
+	const double timeEnd = timeStart_ + timeHorizon;
+
+	for (double t = timeStart_; t < timeEnd; t += timeStep)
+	{
+		const Eigen::VectorXd s1 = evalaluateStateAt(t);
+		const Eigen::VectorXd s2 = otheTraj->evalaluateStateAt(t);
+
+		const double dist = Utils::distance(s1(0), s1(3), s2(0), s2(3));
+		const double velocity = calc_polynomial_velocity_at(S_coeffs_, t - timeStart_);
+
+		Cost += SafetyDistanceCost_forS(dist, velocity);
+	}
+
+	return Cost;
 }

@@ -40,7 +40,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\Behavior.h" />
-    <ClInclude Include="..\src\catch.hpp" />
     <ClInclude Include="..\src\HighwayMap.h" />
     <ClInclude Include="..\src\json.hpp" />
     <ClInclude Include="..\src\LineKeeping.h" />

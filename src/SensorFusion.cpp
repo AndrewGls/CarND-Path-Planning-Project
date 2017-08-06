@@ -30,12 +30,6 @@ SensorFusion::SensorFusion(const vector<SensorFusionData>& sensorFusion, double 
 
 		const Eigen::Vector2d sd = map.CalcFrenet(Point(x, y), s);
 
-		double ddd = sd(1);
-		if (ddd < 0)
-		{
-			int i = 0;
-		}
-
 #ifdef VERBOSE_OTHER_CARS_CHECK_TRANSFORM
 		if (sd(1) < 0)
 		{

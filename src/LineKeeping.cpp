@@ -42,6 +42,12 @@ TrajectoryPtr LineKeeping::optimalTrajectory( const Eigen::VectorXd& currStateX6
 	const double timeStep = m_delta_t;  // time step, used to calculate trajectory cost function.
 
 	const auto leadingVehicles = sensFusion.getLeadingVehiclesInLane (currStateX6);
+	TrajectoryPtr pLeadingVehicleTraj;
+
+	if (!leadingVehicles.empty())
+	{
+		pLeadingVehicleTraj = leadingVehicles.front().PredictedTrajectory(currTime, m_HorizontOtherCarsPrediction);
+	}
 
 	TrajectoryPtr pOptimalTraj;
 	TrajectoryPool pool;
@@ -71,6 +77,20 @@ TrajectoryPtr LineKeeping::optimalTrajectory( const Eigen::VectorXd& currStateX6
 
 			pTraj->addCost(JerkCost + TimeCost + VelocityCost);
 
+			double SaferyDistCost = 0;
+			double minDistanceToLeadingVehicle = 1000;
+			double minTimeDistToLeadingVehicle = 1000;
+
+			if (pLeadingVehicleTraj)
+			{
+				const auto minDistAndTime = pTraj->CalcMinDistanceToTrajectory(pLeadingVehicleTraj, timeStep);
+				minDistanceToLeadingVehicle = minDistAndTime.first;
+				minTimeDistToLeadingVehicle = minDistAndTime.second;
+
+				SaferyDistCost = SaferyDistCostW * pTraj->CalcSaferyDistanceCost(pLeadingVehicleTraj);
+				pTraj->addCost(SaferyDistCost);
+			}
+
 #ifdef VERBOSE_LINE_KEEPING
 			cout << "s: " << currStateX6(0)
 				//<< " d: " << currStateX6(3)
@@ -82,6 +102,9 @@ TrajectoryPtr LineKeeping::optimalTrajectory( const Eigen::VectorXd& currStateX6
 				<< " C: " << pTraj->getCost()
 				<< " Vmin: " << MinMaxVelocity.first
 				<< " Vmax: " << MinMaxVelocity.second
+				<< " MinDistC: " << SaferyDistCost
+				<< " MinDist: " << minDistanceToLeadingVehicle
+				<< " MinTimeDist: " << minTimeDistToLeadingVehicle - currTime
 				<< endl;
 #endif // VERBOSE_LINE_KEEPING
 
