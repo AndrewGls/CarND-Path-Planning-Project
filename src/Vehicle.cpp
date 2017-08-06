@@ -54,8 +54,9 @@ void Vehicle::updateTrajectory(const CarLocalizationData& newState,
 		initDone_ = true;
 	}
 
-	const int nPrevPathSize = previous_path_x.size();
-	const int nPrevPredictionPathSize = nPrevPathSize - (nPredictionPathSize - nReactivePathSize);
+	const int nPrevPathSize = (int) previous_path_x.size();
+	int nPrevPredictionPathSize = nPrevPathSize - (nPredictionPathSize - nReactivePathSize);
+	nPrevPredictionPathSize = max(0, nPrevPredictionPathSize);
 	for (int i = 0; i < nPrevPredictionPathSize; ++i)
 	{
 		next_x_vals_.push_back(previous_path_x[i]);
@@ -99,6 +100,8 @@ void Vehicle::updateTrajectory(const CarLocalizationData& newState,
 		cout << endl;
 #endif // VERBOSE_NEXT_XY
 	}
+
+	//assert(next_x_vals_.size() == nPredictionPathSize);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////

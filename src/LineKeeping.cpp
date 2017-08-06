@@ -78,13 +78,13 @@ TrajectoryPtr LineKeeping::optimalTrajectory( const Eigen::VectorXd& currStateX6
 			pTraj->addCost(JerkCost + TimeCost + VelocityCost);
 
 			double SaferyDistCost = 0;
-			double minDistanceToLeadingVehicle = 1000;
+			double minDistToLeadingVehicle = 1000;
 			double minTimeDistToLeadingVehicle = 1000;
 
 			if (pLeadingVehicleTraj)
 			{
 				const auto minDistAndTime = pTraj->CalcMinDistanceToTrajectory(pLeadingVehicleTraj, timeStep);
-				minDistanceToLeadingVehicle = minDistAndTime.first;
+				minDistToLeadingVehicle = minDistAndTime.first;
 				minTimeDistToLeadingVehicle = minDistAndTime.second;
 
 				SaferyDistCost = SaferyDistCostW * pTraj->CalcSaferyDistanceCost(pLeadingVehicleTraj);
@@ -98,12 +98,12 @@ TrajectoryPtr LineKeeping::optimalTrajectory( const Eigen::VectorXd& currStateX6
 				<< " T: " << T
 				<< " Jc: " << JerkCost
 				<< " Vc: " << VelocityCost
-				<< " Tc: " << TimeCost
+//				<< " Tc: " << TimeCost
 				<< " C: " << pTraj->getCost()
-				<< " Vmin: " << MinMaxVelocity.first
-				<< " Vmax: " << MinMaxVelocity.second
+//				<< " Vmin: " << MinMaxVelocity.first
+//				<< " Vmax: " << MinMaxVelocity.second
 				<< " MinDistC: " << SaferyDistCost
-				<< " MinDist: " << minDistanceToLeadingVehicle
+				<< " MinDist: " << minDistToLeadingVehicle
 				<< " MinTimeDist: " << minTimeDistToLeadingVehicle - currTime
 				<< endl;
 #endif // VERBOSE_LINE_KEEPING

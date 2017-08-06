@@ -324,8 +324,8 @@ double Trajectory::CalcSaferyDistanceCost(const TrajectoryPtr otheTraj, double t
 
 	for (double t = timeStart_; t < timeEnd; t += timeStep)
 	{
-		const Eigen::VectorXd s1 = evalaluateStateAt(t);
-		const Eigen::VectorXd s2 = otheTraj->evalaluateStateAt(t);
+		const VectorXd s1 = evalaluateStateAt(t);
+		const VectorXd s2 = otheTraj->evalaluateStateAt(t);
 
 		const double dist = Utils::distance(s1(0), s1(3), s2(0), s2(3));
 		const double velocity = calc_polynomial_velocity_at(S_coeffs_, t - timeStart_);

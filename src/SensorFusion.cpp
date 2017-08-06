@@ -67,10 +67,7 @@ TOtherVehicles SensorFusion::getLeadingVehiclesInLane (const Eigen::VectorXd& sd
 #ifdef VERBOSE_OTHER_IGNORED_CARS
 		else
 		{
-			cout << "Ignore car id: " << car.get_id()
-				<< " s: " << car.get_s()
-				<< " d: " << car.get_d()
-				<< endl;
+			cout << "Ignored car: ("<< car.get_s() << "," << car.get_d() << ")" << endl;
 		}
 #endif // VERBOSE_OTHER_IGNORED_CARS
 	}
@@ -82,10 +79,7 @@ TOtherVehicles SensorFusion::getLeadingVehiclesInLane (const Eigen::VectorXd& sd
 	for (const auto car : leading_cars)
 	{
 		cout << "---------------------" << endl;
-		cout << "Detected car id: " << car.get_id()
-			<< " s: " << car.get_s()
-			<< " d: " << car.get_d()
-			<< endl;
+		cout << "Detected car in front at: (" << car.get_s() << "," << car.get_d() << ")" << endl;
 	}
 #endif // VERBOSE_OTHER_LEADING_CARS
 
