@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClCompile Include="..\src\Behavior.cpp" />
     <ClCompile Include="..\src\HighwayMap.cpp" />
+    <ClCompile Include="..\src\KalmanFilter.cpp" />
     <ClCompile Include="..\src\LineKeeping.cpp" />
     <ClCompile Include="..\src\main.cpp" />
     <ClCompile Include="..\src\SensorFusion.cpp" />
@@ -42,6 +43,7 @@
     <ClInclude Include="..\src\Behavior.h" />
     <ClInclude Include="..\src\HighwayMap.h" />
     <ClInclude Include="..\src\json.hpp" />
+    <ClInclude Include="..\src\KalmanFilter.h" />
     <ClInclude Include="..\src\LineKeeping.h" />
     <ClInclude Include="..\src\OtherVehicle.h" />
     <ClInclude Include="..\src\SensorFusion.h" />

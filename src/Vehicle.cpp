@@ -49,7 +49,6 @@ void Vehicle::updateTrajectory(const CarLocalizationData& newState,
 		const double velocity = newState.speed * 0.44704;  // convert MPH to m/sec !!!!
 		currTime_ = 0;
 		const Vector2d& initialFrenet = map_.CalcFrenet(Point(newState.x, newState.y), newState.s);
-//		currStatex6 << newState.s, velocity, 0., newState.d, 0., 0.;
 		currStateV6_ << initialFrenet(0), velocity, 0., initialFrenet(1), 0., 0.;
 		initDone_ = true;
 	}
@@ -65,9 +64,9 @@ void Vehicle::updateTrajectory(const CarLocalizationData& newState,
 
 	// Predict position of vehicles after delay-time:
 	const double delayTime = nPrevPredictionPathSize * delta_t;
-	SensorFusion sensorFusion(sf_data_, delayTime, map_);
+	sensorFusion_.update(sf_data_, delayTime, map_);
 
-	TrajectoryPtr pTraj = behavior_.optimalTrajectory(currStateV6_, currTime_, sensorFusion);
+	TrajectoryPtr pTraj = behavior_.optimalTrajectory(currStateV6_, currTime_, sensorFusion_);
 
 #ifdef VERBOSE_NEXT_XY
 	cout << "------- Driving path ----------" << endl;

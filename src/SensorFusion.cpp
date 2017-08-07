@@ -7,8 +7,11 @@
 
 using namespace std;
 
+SensorFusion::SensorFusion()
+{
+}
 
-SensorFusion::SensorFusion(const vector<SensorFusionData>& sensorFusion, double delayTime, const HighwayMap& map)
+void SensorFusion::update(const vector<SensorFusionData>& sensorFusion, double delayTime, const HighwayMap& map)
 {
 	const auto count = sensorFusion.size();
 

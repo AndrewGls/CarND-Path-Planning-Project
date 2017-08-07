@@ -2,6 +2,7 @@
 
 #include "Types.h"
 #include "Behavior.h"
+#include "SensorFusion.h"
 #include <vector>
 #include <memory>
 
@@ -48,6 +49,7 @@ private:
 	Eigen::VectorXd currStateV6_; // [s, v, a, d, d_d, d_dd]
 	//---------------
 
+	SensorFusion sensorFusion_;
 	Behavior behavior_;
 
 	const double speed_limit_ = (50. - 2.) * 0.44704; // speed limit in m/s
