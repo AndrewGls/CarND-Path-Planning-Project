@@ -75,6 +75,7 @@ private:
 	static Eigen::VectorXd calc_polynomial_at (const Eigen::VectorXd& coeffsX6, double t);
 	// Returns Jerk value using polynomial value at time 't'.
 	inline double calc_polynomial_jerk_at (const Eigen::VectorXd& coeffsX6, double t) const;
+	inline double calc_polynomial_accel_at(const Eigen::VectorXd& coeffsX6, double t) const;
 	inline double calc_polynomial_velocity_at (const Eigen::VectorXd& coeffsX6, double t) const;
 
 	inline double SafetyDistanceCost_forS(double distance, double velocity) const;
@@ -85,8 +86,8 @@ private:
 	static Eigen::VectorXd calc_s_polynomial_velocity_keeping(const Eigen::VectorXd& startStateV3, double targetVelocity, double T);
 
 private:
-	double timeStart_ = 0;
-	double duration_ = 0;	// duration T
+	double timeStart_;
+	double duration_;		// duration T
 	double cost_ = 0;
 	double dt_ = delta_t;	// time step along a trajectory
 
@@ -106,6 +107,16 @@ public:
 /////////////////////////////////////////////////////////////////////////////////////////
 
 inline double Trajectory::calc_polynomial_jerk_at(const Eigen::VectorXd& a, double t) const
+{
+	// s(t) = a0 + a1 * t + a2 * t^2 + a3 * t^3 + a4 * t^4 + a5 * t^5
+	// s_d(t) = a1 + 2*a2 * t + 3*a3 * t^2 + 4*a4 * t^3 + 5*a5 * t^4
+	// s_dd(t) = 2*a2 + 6*a3 * t^1 + 12*a4 * t^2 + 20*a5 * t^3
+
+	// calculate s_ddd(t)
+	return 6 * a(3) + 24 * a(4) * t + 60 * a(5) * t * t;
+}
+
+inline double Trajectory::calc_polynomial_accel_at(const Eigen::VectorXd& a, double t) const
 {
 	// s(t) = a0 + a1 * t + a2 * t^2 + a3 * t^3 + a4 * t^4 + a5 * t^5
 	// s_d(t) = a1 + 2*a2 * t + 3*a3 * t^2 + 4*a4 * t^3 + 5*a5 * t^4
@@ -132,24 +143,23 @@ inline double Trajectory::calc_polynomial_velocity_at(const Eigen::VectorXd& a, 
 	return a(1) + 2 * a(2) * t + 3 * a(3) * t2 + 4 * a(4) * t3 + 5 * a(5) * t4;
 }
 
-inline double __braking_distance(double speed)
-{
-	static constexpr double mu = 1.;//0.7;
-	static constexpr double g = 9.8; // g is the gravity of Earth
-	return speed*speed / (2 * mu * g);
-}
-
-
+/*
 inline double logistic(double x)
 {
 	return 2. / (1 + exp(-x)) - 1.;
-}
+}*/
 
 inline double Trajectory::SafetyDistanceCost_forS(double distance, double velocity) const
 {
-//	const double safetyDistance = __braking_distance(velocity);
-//	return 1. * logistic(safetyDistance / distance);
+	//const auto safetyDist = Utils::braking_distance(velocity);
+	constexpr double D0 = 2; // safety distance, known as constant time gap law.
+	constexpr double tau = 1.8;
+	const auto safetyDist = D0 + tau * velocity;
 
-	return 0;
+	if (distance > safetyDist)
+		return 0.0;
+
+	// Thank you https://www.desmos.com/calculator/q2akbfqxkb
+	return std::exp(distance * std::log(0.08) / (safetyDist - D0));
 }
 

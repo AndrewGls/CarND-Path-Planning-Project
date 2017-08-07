@@ -36,6 +36,12 @@ namespace Utils
 		return 2;
 	}
 
+	inline double braking_distance(double speed, double mu = 0.7)
+	{
+		static constexpr double g = 9.8; // g is the gravity of Earth
+		return speed*speed / (2 * mu * g);
+	}
+
 
 	int ClosestWaypoint(double x, double y, std::vector<double> maps_x, std::vector<double> maps_y);
 	int NextWaypoint(double x, double y, double theta, std::vector<double> maps_x, std::vector<double> maps_y);
