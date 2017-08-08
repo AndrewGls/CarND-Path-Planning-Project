@@ -7,15 +7,21 @@
 
 using namespace std;
 
-SensorFusion::SensorFusion()
+
+void SensorFusion::predict(double deltaTime)
 {
+	for (auto& elem : m_mapVehicles)
+		elem.second.predict(deltaTime);
 }
 
-void SensorFusion::update(const vector<SensorFusionData>& sensorFusion, double delayTime, const HighwayMap& map)
-{
-	const auto count = sensorFusion.size();
 
-	m_vehicles.resize(count);
+void SensorFusion::update(const vector<SensorFusionData>& sensorFusion, double currS, const HighwayMap& map)
+{
+	m_mapUpdate.clear();
+	for (const auto& elem : m_mapVehicles)
+		m_mapUpdate[elem.first] = false;
+
+	const auto count = sensorFusion.size();
 
 #ifdef VERBOSE_OTHER_CARS_CHECK_TRANSFORM
 	std::cout << "Other cars at: ";
@@ -25,44 +31,50 @@ void SensorFusion::update(const vector<SensorFusionData>& sensorFusion, double d
 	{
 		const SensorFusionData& sf = sensorFusion[i];
 
-		// We expect that vehicle drives with constant velocity.
-		const auto x = sf.x + sf.vx * delayTime;
-		const auto y = sf.y + sf.vy * delayTime;
 		const auto v = sqrt(sf.vx * sf.vx + sf.vy * sf.vy);
-		const auto s = sf.s + v * delayTime;
+		const Eigen::Vector2d sd = map.CalcFrenet(Point(sf.x, sf.y), sf.s);
+		double s = sd(0);
 
-		const Eigen::Vector2d sd = map.CalcFrenet(Point(x, y), s);
+		const double max_s = map.max_s();
+		const double max_s2 = max_s / 2;
 
-#ifdef VERBOSE_OTHER_CARS_CHECK_TRANSFORM
-		if (sd(1) < 0)
-		{
-		std::cout << " "
-			<< x << ","
-			<< y << ","
-			<< sd(0) << ","
-			<< sd(1)
-			<< std::endl;
+		while (currS - s > max_s2) {
+			s += max_s;
 		}
-#endif
+		while (currS - s < -max_s2) {
+			s -= max_s;
+		}
 
-		m_vehicles[i] = OtherVehicle(sf.id, x, y, v, sd(0), sd(1));
+		auto it = m_mapVehicles.find(sf.id);
+
+		if (it == m_mapVehicles.end())
+			m_mapVehicles [sf.id] = OtherVehicle(s, sd(1), v);
+		else
+			it->second.update(s, sd(1), v);
+
+		m_mapUpdate[sf.id] = true;
+	}
+
+	for (const auto& elem : m_mapUpdate)
+	{
+		if (!elem.second)
+			m_mapVehicles.erase(elem.first);
 	}
 }
+
 
 TOtherVehicles SensorFusion::getLeadingVehiclesInLane (const Eigen::VectorXd& sdcStateV6) const
 {
 	TOtherVehicles leading_cars;
-	const auto count = m_vehicles.size();
-
-	leading_cars.reserve(count);
+	leading_cars.reserve(20);
 
 	const auto s = sdcStateV6(0);
 	const auto d = sdcStateV6(3);
-	const int lane = Utils::GetLaneNumberFor(d);
+	const int lane = Utils::getLaneNumberForD(d);
 
-	for (size_t i = 0; i < count; i++)
+	for (const auto& elem : m_mapVehicles)
 	{
-		const auto& car = m_vehicles[i];
+		const auto& car = elem.second;
 		if (car.get_s() > s && car.isInlane(lane))
 		{
 			leading_cars.push_back(car);
@@ -89,3 +101,21 @@ TOtherVehicles SensorFusion::getLeadingVehiclesInLane (const Eigen::VectorXd& sd
 	return leading_cars;
 }
 
+TOtherVehicles SensorFusion::getNearestVehiclesInLane(const Eigen::VectorXd& sdcStateV6, int lane, double deltaS) const
+{
+	TOtherVehicles leading_cars;
+	leading_cars.reserve(20);
+
+	const auto s = sdcStateV6(0);
+
+	for (const auto& elem : m_mapVehicles)
+	{
+		const auto& car = elem.second;
+		if (car.isInlane(lane) && car.get_s() > s - deltaS && car.get_s() < s + deltaS)
+		{
+			leading_cars.push_back(car);
+		}
+	}
+
+	return leading_cars;
+}

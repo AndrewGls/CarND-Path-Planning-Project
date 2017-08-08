@@ -3,7 +3,7 @@
 #include "Types.h"
 #include "HighwayMap.h"
 #include "OtherVehicle.h"
-#include <vector>
+#include <unordered_map>
 
 using TOtherVehicles = std::vector<OtherVehicle>;
 
@@ -12,13 +12,17 @@ using TOtherVehicles = std::vector<OtherVehicle>;
 class SensorFusion
 {
 public:
-	SensorFusion();
+	SensorFusion() {}
 
-	void update (const std::vector<SensorFusionData>& sensorFusion, double delayTime, const HighwayMap& map);
+	void predict(double deltaTime);
+	void update (const std::vector<SensorFusionData>& sensorFusion, double currS, const HighwayMap& map);
 
-	// Returns other leading vehicles in the line which is defined by SDC vehicle state [s, s_d, s_dd, d, d_d, d_dd].
+	// Returns other leading vehicles in the lane which is defined by SDC vehicle state [s, s_d, s_dd, d, d_d, d_dd].
 	TOtherVehicles getLeadingVehiclesInLane (const Eigen::VectorXd& sdcStateV6) const;
+	// Returns all vehicles in the lane which are close to SDC car's S-position: [sdcStateV6(0)-deltaS, sdcStateV6(0)+deltaS].
+	TOtherVehicles getNearestVehiclesInLane(const Eigen::VectorXd& sdcStateV6, int lane, double deltaS = 200) const;
 
 private:
-	TOtherVehicles m_vehicles;
+	std::unordered_map<int, bool> m_mapUpdate;
+	std::unordered_map<int, OtherVehicle> m_mapVehicles;
 };

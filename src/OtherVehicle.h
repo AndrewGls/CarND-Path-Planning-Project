@@ -2,32 +2,31 @@
 
 #include "Utils.hpp"
 #include "Trajectory.h"
+#include "KalmanFilter.h"
 
 class OtherVehicle
 {
 public:
-	OtherVehicle(int id = -1, double x = 0, double y = 0, double v = 0, double s = 0, double d = 0);
+	OtherVehicle(double s = 0, double d = 0, double vs = 0);
 
-	int    get_id() const { return m_id; }
-	double get_s() const { return m_s; }
-	double get_d() const { return m_d; }
-	double get_v() const { return m_v; }
+	int    get_lane() const { return Utils::getLaneNumberForD(get_d()); }
+	bool   isInlane(int lane) const { return lane == get_lane() && lane != -1; }
 
-	double get_x() const { return m_x; }
-	double get_y() const { return m_y; }
+	double get_s() const { return m_kalmanFilter.s(); }
+	double get_d() const { return m_kalmanFilter.d(); }
+	double get_v() const { return m_kalmanFilter.d(); }
 
-	int    get_lane() const { return Utils::GetLaneNumberFor(m_d); }
-	bool   isInlane (int lane) const { return lane == get_lane() && lane != -1;  }
+	void predict(double deltaTime) { m_kalmanFilter.PredictStep(deltaTime); }
+	void update(double s, double d, double vs) { m_kalmanFilter.UpdateStep(s, d, vs); }
 
-	TrajectoryPtr PredictedTrajectory (double currTime, double timeDuration) const;
+	// Generates trajectory as matrix of rows [s, d, vs, vd].
+	// Number of rows = duration / delataTime.
+	Eigen::MatrixXd PredictedTrajectory(double delataTime, double duration);
+
+//	TrajectoryPtr PredictedTrajectory (double currTime, double timeDuration) const;
 
 private:
-	int m_id;
-	double m_x;
-	double m_y;
-	double m_v;
-	double m_s;
-	double m_d;
+	KalmanFilter m_kalmanFilter;
 };
 
 
@@ -35,18 +34,33 @@ private:
 //---------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------
 
-inline OtherVehicle::OtherVehicle (int id , double x, double y, double v, double s, double d)
-	: m_id(id)
-	, m_x(x)
-	, m_y(y)
-	, m_v(v)
-	, m_s(s)
-	, m_d(d)
+inline OtherVehicle::OtherVehicle (double s, double d, double vs)
+	: m_kalmanFilter(s, d, vs)
 {
 }
 
+
 //---------------------------------------------------------------------------------------
-inline TrajectoryPtr OtherVehicle::PredictedTrajectory (double currTime, double timeDuration) const
+/*inline TrajectoryPtr OtherVehicle::PredictedTrajectory (double currTime, double timeDuration) const
 {
 	return Trajectory::ConstartVelocity_STrajectory (m_s, m_d, m_v, currTime, timeDuration);
+}
+*/
+
+inline Eigen::MatrixXd OtherVehicle::PredictedTrajectory(double delataTime, double duration)
+{
+	m_kalmanFilter.SaveState();
+
+	const auto k = static_cast<size_t>(duration / delataTime);
+	Eigen::MatrixXd Result(k, 4);
+
+	for (size_t i = 0; i < k; i++)
+	{
+		Result.row(i) << m_kalmanFilter.x().transpose();
+		m_kalmanFilter.PredictStep(delataTime);
+	}
+
+	m_kalmanFilter.RestoreState();
+
+	return Result;
 }

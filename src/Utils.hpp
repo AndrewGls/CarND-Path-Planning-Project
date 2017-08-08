@@ -24,8 +24,13 @@ namespace Utils
 		return sqrt((x2 - x1)*(x2 - x1) + (y2 - y1)*(y2 - y1));
 	}
 
+	inline double distance(double x1, double x2)
+	{
+		return abs(x2 - x1);
+	}
+
 	// Returns lane number -1, 0, 1, 2 for specified d coord. in Frenet frame.
-	inline int GetLaneNumberFor(double d)
+	inline int getLaneNumberForD(double d)
 	{
 		if (d > 0 || d < -12)
 			return -1; // outside of right-driving road.

@@ -33,7 +33,9 @@ TrajectoryPtr LineKeeping::optimalTrajectory( const Eigen::VectorXd& currStateX6
 
 	const double currS = currStateX6(0);
 	const double currVelosity = currStateX6(1);
-	const double D0 = saferyDistance(currVelosity);
+
+	const double currD = currStateX6(3);
+	const int currLane = Utils::getLaneNumberForD(currD);
 
 	constexpr double velocity_step = 1; // m/s
 	constexpr double T_step = 1;		// s
@@ -41,87 +43,41 @@ TrajectoryPtr LineKeeping::optimalTrajectory( const Eigen::VectorXd& currStateX6
 
 	const double timeStep = m_delta_t;  // time step, used to calculate trajectory cost function.
 
-	const auto leadingVehicles = sensFusion.getLeadingVehiclesInLane (currStateX6);
-	TrajectoryPtr pLeadingVehicleTraj;
+	auto leadingVehicles = sensFusion.getLeadingVehiclesInLane (currStateX6);
+	TOtherCarsTrajectory otherTrajectories;
 
-	if (!leadingVehicles.empty())
+	if (leadingVehicles.size())
 	{
-		pLeadingVehicleTraj = leadingVehicles.front().PredictedTrajectory(currTime, m_HorizontOtherCarsPrediction);
+		otherTrajectories.push_back(leadingVehicles.front().PredictedTrajectory(0.1, m_HorizontPrediction));
 	}
 
-	TrajectoryPtr pOptimalTraj;
-	TrajectoryPool pool;
+
+	TrajectoryPool pool(otherTrajectories, m_SpeedLimit, m_HorizontPrediction);
 
 	for (double v = 0; v < m_SpeedLimit; v += velocity_step)
 	{
 		for (double T = 1; T < maxT; T += T_step)
 		{
-			TrajectoryPtr pTraj = Trajectory::VelocityKeeping_STrajectory(currStateX6, v, currTime, T);
-			const double TimeCost = TimeCostW * T;
-
-			double maxJs, maxJd;
-			double JerkCost = JerkCostW * pTraj->jerkCost_SD (timeStep, maxJs, maxJd);
-
-			const std::pair<double, double>& MinMaxVelocity = pTraj->MinMaxVelocity_S (timeStep);
-			double VelocityCost = std::pow (v - m_SpeedLimit, 2);
-
-			// Penalize invalid trajectories!
-			if (MinMaxVelocity.first < 0 || MinMaxVelocity.second > m_SpeedLimit)
+			if (v == 1 && T == 1)
 			{
-				VelocityCost += 1000;
+				int i = 0;
 			}
-			if (maxJs > m_MaxJerkS)
-			{
-				JerkCost += 1000;
-			}
-
-			pTraj->addCost(JerkCost + TimeCost + VelocityCost);
-
-			double SaferyDistCost = 0;
-			double minDistToLeadingVehicle = 1000;
-			double minTimeDistToLeadingVehicle = 1000;
-
-			if (pLeadingVehicleTraj)
-			{
-				const auto minDistAndTime = pTraj->CalcMinDistanceToTrajectory(pLeadingVehicleTraj, timeStep);
-				minDistToLeadingVehicle = minDistAndTime.first;
-				minTimeDistToLeadingVehicle = minDistAndTime.second;
-
-				SaferyDistCost = SaferyDistCostW * pTraj->CalcSaferyDistanceCost(pLeadingVehicleTraj);
-				pTraj->addCost(SaferyDistCost);
-			}
-
-#ifdef VERBOSE_LINE_KEEPING
-			cout << "s: " << currStateX6(0)
-				//<< " d: " << currStateX6(3)
-				<< " v: " << v
-				<< " T: " << T
-				<< " Jc: " << JerkCost
-				<< " Vc: " << VelocityCost
-//				<< " Tc: " << TimeCost
-				<< " C: " << pTraj->getCost()
-//				<< " Vmin: " << MinMaxVelocity.first
-//				<< " Vmax: " << MinMaxVelocity.second
-				<< " MinDistC: " << SaferyDistCost
-				<< " MinDist: " << minDistToLeadingVehicle
-				<< " MinTimeDist: " << minTimeDistToLeadingVehicle - currTime
-				<< endl;
-#endif // VERBOSE_LINE_KEEPING
-
-			pool.add(pTraj);
+			TrajectoryPtr pTraj = Trajectory::VelocityKeeping_STrajectory(currStateX6, currD, v, currTime, T);
+			pool.addTrajectory(pTraj);
 		}
 	}
 
-	pOptimalTraj = pool.optimalTrajectory();
+	TrajectoryPtr pOptimalTraj = pool.optimalTrajectory();
 
-#ifdef VERBOSE_LINE_KEEPING
+#ifdef VERBOSE_BET_TRAJECTORY
 	cout << "------- Best ----------" << endl;
 	cout << "s: " << currStateX6(0)
 		//<< " d: " << currStateX6(3)
+		<< " MinCost: " << pOptimalTraj->getTotalCost()
 		<< " v: " << pOptimalTraj->DE_V
 		<< " T: " << pOptimalTraj->getDuration()
 		<< endl;
-#endif // #ifdef VERBOSE_LINE_KEEPING
+#endif // #ifdef VERBOSE_BET_TRAJECTORY
 
 	return pOptimalTraj;
 }

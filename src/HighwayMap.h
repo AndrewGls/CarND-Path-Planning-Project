@@ -17,6 +17,8 @@ public:
 	// s_start defines the initial position on the spline.
 	Eigen::Vector2d CalcFrenet(const Point& ptXY, double s_start) const;
 
+	double max_s() const { return max_s_; }
+
 private:
 	void fit_spline();
 	double norm_s(double s) const;

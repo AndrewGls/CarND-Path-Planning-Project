@@ -38,6 +38,7 @@
     <ClCompile Include="..\src\uWS\WebSocket.cpp" />
     <ClCompile Include="..\src\uWS\WebSocketImpl.cpp" />
     <ClCompile Include="..\src\Vehicle.cpp" />
+    <ClCompile Include="..\src\VehicleState.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\Behavior.h" />

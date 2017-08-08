@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Types.h"
+#include <stack>
 
 // See Pedestrian traking:
 //		Term 2, Lesson 5: "Lidar and Radar Fusion with Kalman Filter": "8. State Prediction" and "12. Laser Measurements Part 3".
@@ -48,7 +49,7 @@
 class KalmanFilter
 {
 public:
-	KalmanFilter(double s = 0, double d = 0, double sv = 0);
+	KalmanFilter(double s = 0, double d = 0, double vs = 0);
 
 	Eigen::VectorXd PredictStep(double dt);
 	void UpdateStep(double s, double d, double vs);
@@ -57,6 +58,9 @@ public:
 	double s() const { return x_(0); }
 	double d() const { return x_(1); }
 	double vs() const { return x_(2); }
+
+	void SaveState();
+	void RestoreState();
 
 private:
 	void update_Q(double dt);
@@ -69,4 +73,7 @@ private:
 
 	Eigen::MatrixXd H_; // 3x4
 	Eigen::MatrixXd R_; // 3x3, Measurement Noise Covariance Matrix which represents the uncertainty in our sensor measurements.
+
+	std::stack<Eigen::VectorXd> x_stack_;
+	std::stack<Eigen::MatrixXd> P_stack_;
 };

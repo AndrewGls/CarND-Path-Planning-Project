@@ -6,7 +6,7 @@ using Eigen::MatrixXd;
 using Eigen::Vector3d;
 
 
-KalmanFilter::KalmanFilter(double s, double d, double sv)
+KalmanFilter::KalmanFilter(double s, double d, double vs)
 	: x_(VectorXd::Zero(4))
 	, F_(MatrixXd::Identity(4, 4))
 	, P_(MatrixXd::Identity(4, 4))
@@ -14,7 +14,7 @@ KalmanFilter::KalmanFilter(double s, double d, double sv)
 	, H_(MatrixXd::Zero(3, 4))
 	, R_(MatrixXd::Identity(3, 3))
 {
-	x_ << s, d, sv, 0.;
+	x_ << s, d, vs, 0.;
 
 	//P_.diagonal() << 1, 1, 1, 5;
 	P_.diagonal() << 0.1, 0.1, 0.1, 10.;  // acceleration noise
@@ -66,4 +66,21 @@ void KalmanFilter::update_Q(double dt)
 		      0,         dt_4/4*var_a,        0,        dt_3/2*var_a,
 	      dt_3/2*var_a,        0,        dt_2*var_a,        0,
 		      0,         dt_3/2*var_a,        0,        dt_2*var_a;
+}
+
+
+//---------------------------------------------------------------------------------------
+void KalmanFilter::SaveState()
+{
+	x_stack_.push(x_);
+	P_stack_.push(P_);
+}
+
+void KalmanFilter::RestoreState()
+{
+	x_ = x_stack_.top();
+	P_ = P_stack_.top();
+
+	x_stack_.pop();
+	P_stack_.pop();
 }
