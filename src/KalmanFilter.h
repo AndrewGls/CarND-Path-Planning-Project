@@ -77,3 +77,87 @@ private:
 	std::stack<Eigen::VectorXd> x_stack_;
 	std::stack<Eigen::MatrixXd> P_stack_;
 };
+
+
+#if 0
+#include <random>
+#include <iostream>
+
+inline int FKTest()
+{
+	double s = 10;
+	double d = 2;
+	double vs = 12;
+	double vd = 1;
+
+	int n = 20;
+	double t = 0;
+	double dt = 0.5;
+
+	std::default_random_engine gen(13);
+	std::normal_distribution<double> dist_vs(0, 2);
+	std::normal_distribution<double> dist_vd(0, 0.2);
+
+	std::vector<std::vector<double>> S;
+	std::vector<std::vector<double>> Sn;
+	std::vector<std::vector<double>> Out;
+
+	for (int i = 0; i < n; i++)
+	{
+		std::vector<double> x(3, 0);
+
+		x[0] = s + vs * t;
+		x[1] = d + vd * t;
+		x[2] = vs;
+
+		S.push_back(x);
+
+		double vs_n = (vs + dist_vs(gen));
+		double vd_n = (vd + dist_vd(gen));
+
+		x[0] = s + vs_n * t;
+		x[1] = d + vd_n * t;
+		x[2] = vs_n;
+
+		Sn.push_back(x);
+
+		t += dt;
+	}
+
+	KalmanFilter kf(0, 0, 0);
+
+	t = 0;
+
+	for (int i = 0; i < n; i++)
+	{
+		kf.UpdateStep(Sn[i][0], Sn[i][1], Sn[i][2]);
+		kf.PredictStep(dt);
+
+		std::vector<double> x{ kf.s(), kf.d(), kf.vs() };
+		Out.push_back(x);
+	}
+
+
+	std::cout << "-------- ORG ------------" << std::endl;
+
+	for (int i = 0; i < S.size(); i++) {
+		std::cout << S[i][0] << ", " << S[i][1] << ", " << S[i][2] << std::endl;
+	}
+
+	std::cout << "---------N added--------------" << std::endl;
+
+	for (int i = 0; i < Sn.size(); i++) {
+		std::cout << Sn[i][0] << ", " << Sn[i][1] << ", " << Sn[i][2] << std::endl;
+	}
+
+	std::cout << "---------Filtered--------------" << std::endl;
+
+	for (int i = 0; i < Out.size(); i++) {
+		std::cout << Out[i][0] << ", " << Out[i][1] << ", " << Out[i][2] << std::endl;
+	}
+
+	return 1;
+}
+
+static int i = FKTest();
+#endif
