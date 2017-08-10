@@ -30,8 +30,8 @@ private:
 	TPool m_pool;
 	TOtherCarsTrajectory m_otherTrajectories;
 
-	double m_SpeedLimit = 22;// (50. - 2.) * 0.44704; // speed limit in m/s
-	double m_HorizontPrediction = 4.;//3;// 1.; // sec
+	double m_SpeedLimit;
+	double m_HorizontPrediction;
 
 	constexpr static double m_MaxJerkS = 100;
 

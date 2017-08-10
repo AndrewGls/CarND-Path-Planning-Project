@@ -80,8 +80,10 @@ void TrajectoryPool::calcTrajectoryCost(TrajectoryPtr pTraj)
 		<< " T: " << pTraj->getDuration()
 		<< " Jc: " << JerkCost
 		<< " Vc: " << VelocityCost
+		<< " cars: " << m_otherTrajectories.size()
 		//				<< " Tc: " << TimeCost
 		<< " C: " << pTraj->getTotalCost()
+		<< " DC: " << MaxSaferyDistCost
 		//				<< " Vmin: " << MinMaxVelocity.first
 		//				<< " Vmax: " << MinMaxVelocity.second
 		<< endl;

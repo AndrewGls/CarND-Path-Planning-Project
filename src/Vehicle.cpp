@@ -12,7 +12,6 @@ using Eigen::Vector2d;
 using namespace std;
 
 namespace {
-//	static constexpr double delta_t = 20. / 1000.; // 20ms between waypoints
 	static constexpr double buffer_distance = 2;   // m units, distance between vehicles when speed is clise to 0.
 	static constexpr double lane_wide = 4;        // each lane is 4 m wide
 }

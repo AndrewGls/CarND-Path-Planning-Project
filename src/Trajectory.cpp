@@ -121,16 +121,17 @@ void Trajectory::getTrajectorySDPointsTo(vector<Eigen::VectorXd>& outPoints, dou
 
 VectorXd Trajectory::evalaluateStateAt(double time) const
 {
-	if (time <= timeStart_ + duration_)
+	double t = time - timeStart_;
+	VectorXd state = evalaluateStateAt(S_coeffs_, D_coeffs_, std::min(t, duration_));
+
+	// model with acceleration = 0
+	if (t > duration_)
 	{
-		return evalaluateStateAt(S_coeffs_, D_coeffs_, time - timeStart_);
+		const double dt = t - duration_;
+		state(0) += state(1) * dt;
+		state(3) += state(4) * dt;
 	}
 
-	VectorXd state = evalaluateStateAt(S_coeffs_, D_coeffs_, duration_);
-	VectorXd speedVector = VectorXd::Zero(6);
-	speedVector(0) = state(1);
-	speedVector(3) = state(4);
-	state += (time - timeStart_ - duration_) * speedVector;
 	return state;
 }
 
@@ -271,8 +272,8 @@ double Trajectory::jerkCost_SD(double timeDuration, double& maxJs, double& maxJd
 
 	for (double t = 0; t < timeDuration; t += cost_dt_)
 	{
-		const double Js = calc_polynomial_jerk_at(S_coeffs_, t);
-		const double Jd = calc_polynomial_jerk_at(D_coeffs_, t);
+		const double Js = calc_polynomial_jerk_at(S_coeffs_, std::min(t, timeDuration));
+		const double Jd = calc_polynomial_jerk_at(D_coeffs_, std::min(t, timeDuration));
 		Cs += Js*Js;
 		Cd += Jd*Jd;
 

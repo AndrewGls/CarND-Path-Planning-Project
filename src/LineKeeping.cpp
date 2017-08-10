@@ -43,12 +43,12 @@ TrajectoryPtr LineKeeping::optimalTrajectory( const Eigen::VectorXd& currStateX6
 
 	const double timeStep = m_delta_t;  // time step, used to calculate trajectory cost function.
 
-	auto leadingVehicles = sensFusion.getLeadingVehiclesInLane (currStateX6);
+	auto nearestVehicles = sensFusion.getNearestVehiclesInLane(currStateX6);
 	TOtherCarsTrajectory otherTrajectories;
 
-	if (leadingVehicles.size())
+	for (OtherVehicle& otherCar : nearestVehicles)
 	{
-		otherTrajectories.push_back(leadingVehicles.front().PredictedTrajectory(0.1, m_HorizontPrediction));
+		otherTrajectories.push_back(otherCar.PredictedTrajectory(0.1, m_HorizontPrediction));
 	}
 
 
@@ -69,7 +69,7 @@ TrajectoryPtr LineKeeping::optimalTrajectory( const Eigen::VectorXd& currStateX6
 
 	TrajectoryPtr pOptimalTraj = pool.optimalTrajectory();
 
-#ifdef VERBOSE_BET_TRAJECTORY
+#ifdef VERBOSE_BEST_TRAJECTORY
 	cout << "------- Best ----------" << endl;
 	cout << "s: " << currStateX6(0)
 		//<< " d: " << currStateX6(3)
@@ -77,7 +77,7 @@ TrajectoryPtr LineKeeping::optimalTrajectory( const Eigen::VectorXd& currStateX6
 		<< " v: " << pOptimalTraj->DE_V
 		<< " T: " << pOptimalTraj->getDuration()
 		<< endl;
-#endif // #ifdef VERBOSE_BET_TRAJECTORY
+#endif // #ifdef VERBOSE_BEST_TRAJECTORY
 
 	return pOptimalTraj;
 }

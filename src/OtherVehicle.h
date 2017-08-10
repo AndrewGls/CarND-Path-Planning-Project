@@ -14,7 +14,7 @@ public:
 
 	double get_s() const { return m_kalmanFilter.s(); }
 	double get_d() const { return m_kalmanFilter.d(); }
-	double get_v() const { return m_kalmanFilter.d(); }
+//	double get_v() const { return m_kalmanFilter.vs(); }
 
 	void predict(double deltaTime) { m_kalmanFilter.PredictStep(deltaTime); }
 	void update(double s, double d, double vs) { m_kalmanFilter.UpdateStep(s, d, vs); }
@@ -22,8 +22,6 @@ public:
 	// Generates trajectory as matrix of rows [s, d, vs, vd].
 	// Number of rows = duration / delataTime.
 	Eigen::MatrixXd PredictedTrajectory(double delataTime, double duration);
-
-//	TrajectoryPtr PredictedTrajectory (double currTime, double timeDuration) const;
 
 private:
 	KalmanFilter m_kalmanFilter;
@@ -41,11 +39,6 @@ inline OtherVehicle::OtherVehicle (double s, double d, double vs)
 
 
 //---------------------------------------------------------------------------------------
-/*inline TrajectoryPtr OtherVehicle::PredictedTrajectory (double currTime, double timeDuration) const
-{
-	return Trajectory::ConstartVelocity_STrajectory (m_s, m_d, m_v, currTime, timeDuration);
-}
-*/
 
 inline Eigen::MatrixXd OtherVehicle::PredictedTrajectory(double delataTime, double duration)
 {

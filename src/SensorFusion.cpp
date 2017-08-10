@@ -101,21 +101,34 @@ TOtherVehicles SensorFusion::getLeadingVehiclesInLane (const Eigen::VectorXd& sd
 	return leading_cars;
 }
 
-TOtherVehicles SensorFusion::getNearestVehiclesInLane(const Eigen::VectorXd& sdcStateV6, int lane, double deltaS) const
+TOtherVehicles SensorFusion::getNearestVehiclesInLane(const Eigen::VectorXd& sdcStateV6, double deltaS) const
 {
 	TOtherVehicles leading_cars;
 	leading_cars.reserve(20);
 
 	const auto s = sdcStateV6(0);
 
+	////--------------------------- TEMP for KEEPING LANE !!!!!!!
+	const double CurrentD = sdcStateV6(3);
+	const int CurrentLane = Utils::getLaneNumberForD(CurrentD);
+	////---------------------------
+
 	for (const auto& elem : m_mapVehicles)
 	{
 		const auto& car = elem.second;
-		if (car.isInlane(lane) && car.get_s() > s - deltaS && car.get_s() < s + deltaS)
+		if (car.isInlane(CurrentLane) && car.get_s() > s - deltaS && car.get_s() < s + deltaS)
 		{
 			leading_cars.push_back(car);
 		}
 	}
+
+#ifdef VERBOSE_OTHER_LEADING_CARS
+	cout << "---------------------" << endl;
+	for (const auto car : leading_cars)
+	{
+		cout << "Detected car in front at: (" << car.get_s() << "," << car.get_d() << ")" << "),      S:" << s << std::endl;
+	}
+#endif // VERBOSE_OTHER_LEADING_CARS
 
 	return leading_cars;
 }
