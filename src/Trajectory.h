@@ -30,12 +30,8 @@ public:
 	// Used for prediction position other vehicles: constant velocity model without changing lane is used for small time delays.
 	static TrajectoryPtr ConstartVelocity_STrajectory(double currS, double currD, double currVelosity, double currTime, double timeDuration);
 
-	// Returns array of vectors with time step, where each vector is sd-point [s, s_d, s_dd, d, d_d, d_dd]
-	std::vector<Eigen::VectorXd> getTrajectorySDPoints (double dt);
-	void getTrajectorySDPointsTo (std::vector<Eigen::VectorXd>& outPoints, double dt);
-
 	// Returns vector state [s, s_d, s_dd, d, d_d, d_dd] at the time 'time'.
-	Eigen::VectorXd evalaluateStateAt(double time) const;
+	Eigen::VectorXd EvaluateStateAt(double time) const;
 
 	// Calculates minimum distance to specified trajectory.
 	// Returns pair like { min-distance, time }.
@@ -70,6 +66,8 @@ public:
 	double velocityCost_S(double targetVelocity, double timeDuration) const;
 	std::pair<double, double> MinMaxVelocity_S();
 
+	void PrintInfo();
+
 private:
 	// Calculates Jerk Minimizing Trajectory for start state, end state and duration T.
 	// Input:
@@ -101,7 +99,6 @@ private:
 private:
 	double timeStart_;
 	double duration_;		// duration T
-//	double cost_ = 0;
 	double dt_ = delta_t;	// time step along a trajectory
 	double cost_dt_ = 0.1;  // time step along a trajectory used during evaluation of trajectory-cost.
 
@@ -115,9 +112,9 @@ private:
 public:
 	// DEBUGING part
 	double DE_V = 0;
-	void PrintState() const;
 
-	double calcSaferyDistanceCostDebug(const Eigen::MatrixXd& s2, double timeDuration) const;
+	mutable double DE_DIF_S = 0;
+	mutable double DE_DIF_D = 0;
 };
 
 
@@ -168,6 +165,7 @@ inline double logistic(double x)
 	return 2. / (1 + exp(-x)) - 1.;
 }*/
 
+
 inline double Trajectory::calcLongitudialSafetyDistanceCost(double Sdist, double velocity) const
 {
 	//const auto safetyDist = Utils::braking_distance(velocity);
@@ -189,11 +187,13 @@ inline double Trajectory::calcLateralSafetyDistanceCost(double Ddist) const
 	{
 		return 0;
 	}
-	return std::exp(Ddist * std::log(0.1) / safetyDist);
+	return std::exp(-Ddist / (-safetyDist / std::log(0.1)));
 }
 
 inline double Trajectory::calcSafetyDistanceCost(double Sdist, double Ddist, double velocity) const
 {
+	return calcLongitudialSafetyDistanceCost(Sdist, velocity);
+
 	const double longitudinalDistCost = calcLongitudialSafetyDistanceCost(Sdist, velocity);
 	const double lateralDistCost = calcLateralSafetyDistanceCost(Ddist);
 

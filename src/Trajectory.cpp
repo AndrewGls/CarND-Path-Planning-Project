@@ -3,6 +3,7 @@
 #include "Utils.hpp"
 #include <assert.h>
 #include <limits>
+#include <assert.h>
 
 
 using namespace std;
@@ -89,37 +90,7 @@ TrajectoryPtr Trajectory::ConstartVelocity_STrajectory(double currS, double curr
 }
 
 
-vector<VectorXd> Trajectory::getTrajectorySDPoints(double dt)
-{
-	vector<VectorXd> traj;
-	VectorXd state = VectorXd::Zero(6);
-
-	for (double t = 0; t < duration_; t += dt)
-	{
-		// calculate [s, s_d, s_dd] and [d, d_d, d_dd] at time 't'
-		state << calc_polynomial_at(S_coeffs_, t), calc_polynomial_at(D_coeffs_, t);
-		traj.push_back(state);
-	}
-
-	return traj;
-}
-
-
-void Trajectory::getTrajectorySDPointsTo(vector<Eigen::VectorXd>& outPoints, double dt)
-{
-	VectorXd state = VectorXd::Zero(6);
-	size_t nIndex = 0;
-
-	for (double t = 0; t < duration_; t += dt)
-	{
-		// calculate [s, s_d, s_dd] and [d, d_d, d_dd] at time 't'
-		state << calc_polynomial_at(S_coeffs_, t), calc_polynomial_at(D_coeffs_, t);
-		outPoints[nIndex] = state;
-	}
-}
-
-
-VectorXd Trajectory::evalaluateStateAt(double time) const
+VectorXd Trajectory::EvaluateStateAt(double time) const
 {
 	double t = time - timeStart_;
 	VectorXd state = evalaluateStateAt(S_coeffs_, D_coeffs_, std::min(t, duration_));
@@ -292,7 +263,7 @@ std::pair<double, double> Trajectory::MinMaxVelocity_S()
 		MinDoubleVal//std::numeric_limits<double>::min()
 	);
 
-	for (double t = 0; t < duration_; t += cost_dt_)
+	for (double t = 0; t < duration_; t += dt_)
 	{
 		const double v = calc_polynomial_velocity_at(S_coeffs_, t);
 		minMax.first = std::min(v, minMax.first);
@@ -337,8 +308,8 @@ std::pair<double, double> Trajectory::CalcMinDistanceToTrajectory(const Trajecto
 
 	for (double t = timeStart_; t < timeEnd; t += timeStep)
 	{
-		VectorXd s1 = evalaluateStateAt(t);
-		VectorXd s2 = trajectory->evalaluateStateAt(t);
+		VectorXd s1 = EvaluateStateAt(t);
+		VectorXd s2 = trajectory->EvaluateStateAt(t);
 		const double dist = Utils::distance(s1(0), s1(3), s2(0), s2(3));
 		if (dist < minDist)
 		{
@@ -361,10 +332,10 @@ double Trajectory::calcSaferyDistanceCost(const MatrixXd& s2, double timeDuratio
 
 	for (int i = 0; i < points; i++)
 	{
-		const VectorXd s1 = evalaluateStateAt(t);
+		const VectorXd s1 = EvaluateStateAt(t);
 		const double Sdist = Utils::distance(s1(0), s2(i, 0));
 		const double Ddist = Utils::distance(s1(3), s2(i, 1));
-		const double velocity = s1(1);
+		double velocity = s1(1);
 
 		Cost += calcSafetyDistanceCost(Sdist, Ddist, velocity);
 
@@ -374,41 +345,7 @@ double Trajectory::calcSaferyDistanceCost(const MatrixXd& s2, double timeDuratio
 	return Cost / points;
 }
 
-// Generates trajectory as matrix s2 of rows[s, d, vs, vd]
-double Trajectory::calcSaferyDistanceCostDebug(const MatrixXd& s2, double timeDuration) const
-{
-	double Cost = 0;
-
-	double TmpMinDistS = MaxDoubleVal;
-
-	double t = timeStart_;
-	const int points = static_cast<int>(timeDuration / cost_dt_);
-
-	for (int i = 0; i < points; i++)
-	{
-		const VectorXd s1 = evalaluateStateAt(t);
-		const double Sdist = Utils::distance(s1(0), s2(i, 0));
-		const double Ddist = Utils::distance(s1(3), s2(i, 1));
-		const double velocity = calc_polynomial_velocity_at(S_coeffs_, t - timeStart_);
-
-/*		if (Sdist < 10)
-		{
-			std::cout << " S_DIST: " << s2(i, 0)
-				<< " D_DIST: " << s2(i, 1)
-				<< std::endl;
-		}*/
-
-		Cost += calcSafetyDistanceCost(Sdist, Ddist, velocity);
-
-		TmpMinDistS = std::min(TmpMinDistS, Sdist),
-
-		t += cost_dt_;
-	}
-
-//	return Cost / points;
-	return TmpMinDistS;
-}
-
+/*
 void Trajectory::PrintState() const
 {
 	std::cout << "StartT: " << timeStart_
@@ -423,4 +360,19 @@ void Trajectory::PrintState() const
 		<< " ----------- " << endl
 		<< " D_coeffs_: " << D_coeffs_
 		<< endl;
+}*/
+
+void Trajectory::PrintInfo()
+{
+	const std::pair<double, double>& MinMaxV = MinMaxVelocity_S();
+
+	std::cout << "T: " << timeStart_
+		<< " DC: " << getSafetyDistanceCost()
+		<< " VC: " << getVelocityCost()
+		<< " JC: " << getJerkCost()
+		<< " C: " << getTotalCost()
+		<< " v_min: " << MinMaxV.first
+		<< " v_max: " << MinMaxV.second
+		<< endl;
+
 }

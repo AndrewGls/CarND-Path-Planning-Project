@@ -90,11 +90,16 @@ TOtherVehicles SensorFusion::getLeadingVehiclesInLane (const Eigen::VectorXd& sd
 	// sorts by ascending S
 	sort(leading_cars.begin(), leading_cars.end(), [](const OtherVehicle& l, const OtherVehicle& r) { return l.get_s() < r.get_s(); });
 
+	leading_cars.resize(1); // TEMP!!!
+
 #ifdef VERBOSE_OTHER_LEADING_CARS
 	for (const auto car : leading_cars)
 	{
 		cout << "---------------------" << endl;
-		cout << "Detected car in front at: (" << car.get_s() << "," << car.get_d() << ")" << endl;
+		cout << "Detected car in front at: (" << car.get_s() << "," << car.get_d() << ")"
+			<< " DIST: " << leading_cars[0].get_s() - sdcStateV6(0)
+			<< endl;
+		cout << "---------------------" << endl;
 	}
 #endif // VERBOSE_OTHER_LEADING_CARS
 

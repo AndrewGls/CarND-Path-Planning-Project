@@ -21,12 +21,12 @@ namespace Utils
 
 	inline double distance(double x1, double y1, double x2, double y2)
 	{
-		return sqrt((x2 - x1)*(x2 - x1) + (y2 - y1)*(y2 - y1));
+		return std::sqrt((x2 - x1)*(x2 - x1) + (y2 - y1)*(y2 - y1));
 	}
 
 	inline double distance(double x1, double x2)
 	{
-		return abs(x2 - x1);
+		return std::abs(x2 - x1);
 	}
 
 	// Returns lane number -1, 0, 1, 2 for specified d coord. in Frenet frame.

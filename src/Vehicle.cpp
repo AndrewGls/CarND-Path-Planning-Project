@@ -85,7 +85,7 @@ void Vehicle::updateTrajectory(const CarLocalizationData& newState,
 
 		const auto pt = map_.getXYInterpolated(curr_state(0), curr_state(3));
 		curr_time += delta_t;
-		curr_state = pTraj->evalaluateStateAt(curr_time);
+		curr_state = pTraj->EvaluateStateAt(curr_time);
 
 		next_x_vals_.push_back(pt.x);
 		next_y_vals_.push_back(pt.y);

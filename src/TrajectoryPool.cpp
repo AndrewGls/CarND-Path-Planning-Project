@@ -49,11 +49,11 @@ void TrajectoryPool::calcTrajectoryCost(TrajectoryPtr pTraj)
 	double VelocityCost = VelocityCostWeight * pTraj->velocityCost_S(m_SpeedLimit, m_HorizontPrediction);
 
 	// Penalize invalid trajectories!
-/*	if (MinMaxVelocity.first < 0 || MinMaxVelocity.second > m_SpeedLimit)
+	if (MinMaxVelocity.first < 0 || MinMaxVelocity.second > m_SpeedLimit)
 	{
 		VelocityCost += 1000;
 	}
-	if (maxJs > m_MaxJerkS)
+/*	if (maxJs > m_MaxJerkS)
 	{
 		JerkCost += 1000;
 	}*/
@@ -66,16 +66,6 @@ void TrajectoryPool::calcTrajectoryCost(TrajectoryPtr pTraj)
 		MaxSaferyDistCost = std::max(MaxSaferyDistCost, safetyDistCost);
 	}
 
-	//---------------------------------------
-/*	for (const auto& otherTraj : m_otherTrajectories)
-	{
-		const double safetyDistCost = pTraj->calcSaferyDistanceCostDebug(otherTraj, m_HorizontPrediction);
-//		MaxSaferyDistCost = std::max(MaxSaferyDistCost, safetyDistCost);
-		MaxSaferyDistCost = safetyDistCost;
-	}
-	//---------------------------------------
-*/
-
 	double SaferyDistCost = SaferyDistCostWeight * MaxSaferyDistCost;
 
 	pTraj->setTimeCost(TimeCost);
@@ -86,19 +76,21 @@ void TrajectoryPool::calcTrajectoryCost(TrajectoryPtr pTraj)
 
 #ifdef VERBOSE_LINE_KEEPING
 	Eigen::VectorXd currStateV6 = pTraj->getStartState();
-	cout << "s: " << pTraj->getStartState()(0)
+	cout //<< "s: " << pTraj->getStartState()(0)
 		//<< " d: " << currStateX6(3)
 		<< " v: " << pTraj->DE_V
 		<< " T: " << pTraj->getDuration()
 		<< " Jc: " << JerkCost
 		<< " Vc: " << VelocityCost
-		<< " cars: " << m_otherTrajectories.size()
-		//				<< " Tc: " << TimeCost
-		<< " C: " << pTraj->getTotalCost()
+		//<< " C: " << pTraj->getTotalCost()
 		<< " DC: " << SaferyDistCost
-		//				<< " Vmin: " << MinMaxVelocity.first
-		//				<< " Vmax: " << MinMaxVelocity.second
+		<< " Vmin: " << MinMaxVelocity.first
+		<< " Vmax: " << MinMaxVelocity.second
+//		<< " cars: " << m_otherTrajectories.size()
 		<< endl;
 #endif // VERBOSE_LINE_KEEPING
+
+//	pTraj->PrintInfo();
+
 }
 
