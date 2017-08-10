@@ -364,7 +364,7 @@ double Trajectory::calcSaferyDistanceCost(const MatrixXd& s2, double timeDuratio
 		const VectorXd s1 = evalaluateStateAt(t);
 		const double Sdist = Utils::distance(s1(0), s2(i, 0));
 		const double Ddist = Utils::distance(s1(3), s2(i, 1));
-		const double velocity = calc_polynomial_velocity_at(S_coeffs_, t - timeStart_);
+		const double velocity = s1(1);
 
 		Cost += calcSafetyDistanceCost(Sdist, Ddist, velocity);
 
