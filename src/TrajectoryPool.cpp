@@ -66,10 +66,22 @@ void TrajectoryPool::calcTrajectoryCost(TrajectoryPtr pTraj)
 		MaxSaferyDistCost = std::max(MaxSaferyDistCost, safetyDistCost);
 	}
 
+	//---------------------------------------
+/*	for (const auto& otherTraj : m_otherTrajectories)
+	{
+		const double safetyDistCost = pTraj->calcSaferyDistanceCostDebug(otherTraj, m_HorizontPrediction);
+//		MaxSaferyDistCost = std::max(MaxSaferyDistCost, safetyDistCost);
+		MaxSaferyDistCost = safetyDistCost;
+	}
+	//---------------------------------------
+*/
+
+	double SaferyDistCost = SaferyDistCostWeight * MaxSaferyDistCost;
+
 	pTraj->setTimeCost(TimeCost);
 	pTraj->setJerkCost(JerkCost);
 	pTraj->setVelocityCost(VelocityCost);
-	pTraj->setSafetyDistanceCost(SaferyDistCostWeight * MaxSaferyDistCost);
+	pTraj->setSafetyDistanceCost(SaferyDistCost);
 
 
 #ifdef VERBOSE_LINE_KEEPING
@@ -83,7 +95,7 @@ void TrajectoryPool::calcTrajectoryCost(TrajectoryPtr pTraj)
 		<< " cars: " << m_otherTrajectories.size()
 		//				<< " Tc: " << TimeCost
 		<< " C: " << pTraj->getTotalCost()
-		<< " DC: " << MaxSaferyDistCost
+		<< " DC: " << SaferyDistCost
 		//				<< " Vmin: " << MinMaxVelocity.first
 		//				<< " Vmax: " << MinMaxVelocity.second
 		<< endl;

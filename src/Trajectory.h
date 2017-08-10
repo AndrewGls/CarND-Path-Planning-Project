@@ -116,6 +116,8 @@ public:
 	// DEBUGING part
 	double DE_V = 0;
 	void PrintState() const;
+
+	double calcSaferyDistanceCostDebug(const Eigen::MatrixXd& s2, double timeDuration) const;
 };
 
 

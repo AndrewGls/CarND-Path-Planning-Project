@@ -374,6 +374,41 @@ double Trajectory::calcSaferyDistanceCost(const MatrixXd& s2, double timeDuratio
 	return Cost / points;
 }
 
+// Generates trajectory as matrix s2 of rows[s, d, vs, vd]
+double Trajectory::calcSaferyDistanceCostDebug(const MatrixXd& s2, double timeDuration) const
+{
+	double Cost = 0;
+
+	double TmpMinDistS = MaxDoubleVal;
+
+	double t = timeStart_;
+	const int points = static_cast<int>(timeDuration / cost_dt_);
+
+	for (int i = 0; i < points; i++)
+	{
+		const VectorXd s1 = evalaluateStateAt(t);
+		const double Sdist = Utils::distance(s1(0), s2(i, 0));
+		const double Ddist = Utils::distance(s1(3), s2(i, 1));
+		const double velocity = calc_polynomial_velocity_at(S_coeffs_, t - timeStart_);
+
+/*		if (Sdist < 10)
+		{
+			std::cout << " S_DIST: " << s2(i, 0)
+				<< " D_DIST: " << s2(i, 1)
+				<< std::endl;
+		}*/
+
+		Cost += calcSafetyDistanceCost(Sdist, Ddist, velocity);
+
+		TmpMinDistS = std::min(TmpMinDistS, Sdist),
+
+		t += cost_dt_;
+	}
+
+//	return Cost / points;
+	return TmpMinDistS;
+}
+
 void Trajectory::PrintState() const
 {
 	std::cout << "StartT: " << timeStart_
