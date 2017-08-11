@@ -1,6 +1,7 @@
-#include <iostream>
 #include "Behavior.h"
 #include "LineKeeping.h"
+#include <iostream>
+#include <assert.h>
 
 
 using Eigen::VectorXd;
@@ -9,13 +10,31 @@ using Eigen::MatrixXd;
 using namespace std;
 
 Behavior::Behavior()
-	: m_vState(LineKeepingState)
-	, m_scenarios(NumOfStates)
 {
-	m_scenarios[LineKeepingState] = std::make_unique<LineKeeping>();
+	m_states.reserve(2);
+	m_states.push_back(std::make_unique<LineKeeping>());
 }
 
 TrajectoryPtr Behavior::optimalTrajectory (const VectorXd& currStateX6, double currTime, const SensorFusion& sensorFusion)
 {
-	return m_scenarios[m_vState]->optimalTrajectory(currStateX6, currTime, sensorFusion);
+	assert(m_states.size() < 3);
+
+	VehicleState* pNewState = nullptr;
+	TrajectoryPtr pOptimalTrajectory;
+	VehicleState* pCurrState = m_states.back().get();
+
+	tie(pNewState, pOptimalTrajectory) = pCurrState->optimalTrajectory(currStateX6, currTime, sensorFusion);
+
+	if (!pNewState)
+	{
+		assert(m_states.size() == 2);
+		m_states.pop_back();
+	}
+	else if (pNewState != pCurrState)
+	{
+		assert(m_states.size() == 1);
+		m_states.push_back(VehicleStatePtr(pNewState));
+	}
+
+	return pOptimalTrajectory;
 }

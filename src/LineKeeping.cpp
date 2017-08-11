@@ -10,18 +10,9 @@ using Eigen::VectorXd;
 using Eigen::MatrixXd;
 
 
-LineKeeping::LineKeeping()
-{
-
-}
-
-LineKeeping::~LineKeeping()
-{
-}
-
-TrajectoryPtr LineKeeping::optimalTrajectory( const Eigen::VectorXd& currStateX6,
-											  double currTime,
-											  const SensorFusion& sensFusion )
+std::tuple<VehicleState*, TrajectoryPtr> LineKeeping::optimalTrajectory( const Eigen::VectorXd& currStateX6,
+																		double currTime,
+																		const SensorFusion& sensFusion )
 {
 	// https://d17h27t6h515a5.cloudfront.net/topher/2017/July/595fd482_werling-optimal-trajectory-generation-for-dynamic-street-scenarios-in-a-frenet-frame/werling-optimal-trajectory-generation-for-dynamic-street-scenarios-in-a-frenet-frame.pdf
 
@@ -31,42 +22,25 @@ TrajectoryPtr LineKeeping::optimalTrajectory( const Eigen::VectorXd& currStateX6
 	// Task: generate optimal longitudinal trajectory set of quartic polynomials by
 	// varying the end constraints by ∆s_d[i] and T[j] according to: [ s1_d, s1+dd, T][ij] = [[st_d + ∆s_d[i]], 0, T[j] ]
 
-	const double currS = currStateX6(0);
-	const double currVelosity = currStateX6(1);
+	const double Tmax = 10;
 
-	const double currD = currStateX6(3);
-	const int currLane = Utils::getLaneNumberForD(currD);
+	const double nCurrS = currStateX6(0);
+	const double nCurrD = currStateX6(3);
+	const int nCurrLane = Utils::getLaneNumberForD(nCurrD);
 
-	constexpr double velocity_step = 1; // m/s
-	constexpr double T_step = 1;		// s
-	constexpr double maxT = 10;			// s
-
-	const double timeStep = m_delta_t;  // time step, used to calculate trajectory cost function.
-
-//	auto nearestVehicles = sensFusion.getNearestVehiclesInLane(currStateX6);
-	auto nearestVehicles = sensFusion.getLeadingVehiclesInLane(currStateX6);
-	TOtherCarsTrajectory otherTrajectories;
-
-	for (OtherVehicle& otherCar : nearestVehicles)
-	{
-		otherTrajectories.push_back(otherCar.PredictedTrajectory(0.1, m_HorizontPrediction));
-	}
-
-
+	// Generates trajectory to stay in the lane.
+	TOtherCarsTrajectory otherTrajectories = sensFusion.GetOtherCarTrajectoryInLane(currStateX6, nCurrLane, m_HorizontPrediction, m_TimeStep);
 	TrajectoryPool pool(otherTrajectories, m_SpeedLimit, m_HorizontPrediction);
-
-	for (double v = 0; v < m_SpeedLimit; v += velocity_step)
+	for (double v = 0; v < m_SpeedLimit; v += 1)
 	{
-		for (double T = 1; T < maxT; T += T_step)
+		for (double T = 1; T < Tmax; T += 1)
 		{
-			if (v == 1 && T == 1)
-			{
-				int i = 0;
-			}
-			TrajectoryPtr pTraj = Trajectory::VelocityKeeping_STrajectory(currStateX6, currD, v, currTime, T);
+			TrajectoryPtr pTraj = Trajectory::VelocityKeeping_STrajectory(currStateX6, nCurrD, v, currTime, T, 0);
 			pool.addTrajectory(pTraj);
 		}
 	}
+
+
 
 	TrajectoryPtr pOptimalTraj = pool.optimalTrajectory();
 
@@ -76,12 +50,14 @@ TrajectoryPtr LineKeeping::optimalTrajectory( const Eigen::VectorXd& currStateX6
 		//<< " d: " << currStateX6(3)
 		<< " MinCost: " << pOptimalTraj->getTotalCost()
 		<< " v: " << pOptimalTraj->DE_V
-		<< " T: " << pOptimalTraj->getDuration()
+		<< " T: " << pOptimalTraj->getDurationS()
 		<< endl;
 	cout << "------- Best ----------" << endl;
 #endif // #ifdef VERBOSE_BEST_TRAJECTORY
 
-	return pOptimalTraj;
+//	pOptimalTraj->PrintInfo();
+
+	return tuple<VehicleState*, TrajectoryPtr>(this, pOptimalTraj);
 }
 
 

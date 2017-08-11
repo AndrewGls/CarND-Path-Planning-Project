@@ -50,7 +50,7 @@ private:
 	//---------------
 
 	SensorFusion sensorFusion_;
-	Behavior behavior_;
+	Behavior m_behavior;
 
 	const double speed_limit_ = (50. - 2.) * 0.44704; // speed limit in m/s
 	double target_speed_;			// m/s

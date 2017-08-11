@@ -1,13 +1,11 @@
 #pragma once
 
+#include "OtherVehicle.h"
 #include "Trajectory.h"
+#include "Eigen-3.3/Eigen/Core"
 #include <deque>
 #include <memory>
-#include "Eigen-3.3/Eigen/Core"
 #include <limits>
-
-
-using TOtherCarsTrajectory = std::vector<Eigen::MatrixXd>;
 
 
 class TrajectoryPool

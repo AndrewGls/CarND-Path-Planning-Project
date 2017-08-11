@@ -2,14 +2,12 @@
 
 #include "VehicleState.h"
 
-class LineKeeping : public CVehicleState
+class LineKeeping : public VehicleState
 {
 public:
-	LineKeeping();
-	~LineKeeping();
+	LineKeeping() {}
 
-	virtual TrajectoryPtr optimalTrajectory(const Eigen::VectorXd& currStateX6,
-											double currTime,
-											const SensorFusion& sensFusion) override;
+	virtual std::tuple<VehicleState*, TrajectoryPtr> optimalTrajectory(
+		const Eigen::VectorXd& currStateX6, double currTime, const SensorFusion& sensFusion) override;
 
 };

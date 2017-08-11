@@ -15,7 +15,8 @@ using Eigen::Vector3d;
 
 Trajectory::Trajectory()
 	: timeStart_(0)
-	, duration_(0)
+	, durationS_(0)
+	, durationD_(0)
 	, startState_(VectorXd::Zero(6))
 	, endState_(VectorXd::Zero(6))
 	, S_coeffs_(VectorXd::Zero(6))
@@ -23,16 +24,17 @@ Trajectory::Trajectory()
 {
 }
 
-Trajectory::Trajectory(const VectorXd& startStateX6, const VectorXd& endStateX6, double duration, double timeStart)
+Trajectory::Trajectory(const VectorXd& startStateX6, const VectorXd& endStateX6, double durationS, double durationD, double timeStart)
 	: timeStart_(timeStart)
-	, duration_(duration)
+	, durationS_(durationS)
+	, durationD_(durationD)
 	, startState_(startStateX6)
 	, endState_(endStateX6)
 	, S_coeffs_(VectorXd::Zero(6))
 	, D_coeffs_(VectorXd::Zero(6))
 {
-	S_coeffs_ = CalcQuinticPolynomialCoeffs(startStateX6.head(3), endStateX6.head(3), duration_);
-	D_coeffs_ = CalcQuinticPolynomialCoeffs(startStateX6.segment(3,3), endStateX6.segment(3,3), duration_);
+	S_coeffs_ = CalcQuinticPolynomialCoeffs(startStateX6.head(3), endStateX6.head(3), durationS_);
+	D_coeffs_ = CalcQuinticPolynomialCoeffs(startStateX6.segment(3,3), endStateX6.segment(3,3), durationD_);
 }
 
 
@@ -40,17 +42,18 @@ TrajectoryPtr Trajectory::VelocityKeeping_STrajectory( const VectorXd& currState
 													   double endD,
 													   double targetVelocity,
 													   double currTime,
-													   double timeDuration )
+													   double timeDurationS,
+													   double timeDurationD)
 {
 	TrajectoryPtr pTraj = std::make_shared<Trajectory>();
 	pTraj->startState_  = currStateX6;
 	pTraj->endState_(3) = endD;
 	pTraj->timeStart_   = currTime;
-	pTraj->duration_    = timeDuration;
+	pTraj->durationS_    = timeDurationS;
 
 	const double currD = currStateX6(3);
 
-	pTraj->S_coeffs_ = calc_s_polynomial_velocity_keeping(currStateX6.head(3), targetVelocity, timeDuration);
+	pTraj->S_coeffs_ = calc_s_polynomial_velocity_keeping(currStateX6.head(3), targetVelocity, timeDurationS);
 
 	if (currD == endD)
 	{
@@ -58,8 +61,7 @@ TrajectoryPtr Trajectory::VelocityKeeping_STrajectory( const VectorXd& currState
 	}
 	else
 	{
-		// Recalculate D_coeffs_ for new endD !!!!!!!
-		assert(false);
+		pTraj->D_coeffs_ = CalcQuinticPolynomialCoeffs(pTraj->startState_.segment(3, 3), pTraj->endState_.segment(3, 3), timeDurationD);
 	}
 
 	pTraj->DE_V = targetVelocity;
@@ -69,7 +71,7 @@ TrajectoryPtr Trajectory::VelocityKeeping_STrajectory( const VectorXd& currState
 
 
 // Used for prediction position other vehicles: constant velocity model without changing lane is used for small time delays.
-TrajectoryPtr Trajectory::ConstartVelocity_STrajectory(double currS, double currD, double currVelosity, double currTime, double timeDuration)
+/*TrajectoryPtr Trajectory::ConstartVelocity_STrajectory(double currS, double currD, double currVelosity, double currTime, double timeDuration)
 {
 	// Constant velosity trajectory with saving without shanging lane:
 	//  Start state: [s, s_d, 0, d, 0, 0] 
@@ -84,35 +86,59 @@ TrajectoryPtr Trajectory::ConstartVelocity_STrajectory(double currS, double curr
 	pTraj->D_coeffs_ << currD, 0, 0, 0, 0, 0;
 
 	pTraj->timeStart_ = currTime;
-	pTraj->duration_ = timeDuration;
+	pTraj->durationS_ = timeDuration;
 
 	return pTraj;
-}
+}*/
 
-
+/*
 VectorXd Trajectory::EvaluateStateAt(double time) const
 {
 	double t = time - timeStart_;
-	VectorXd state = evalaluateStateAt(S_coeffs_, D_coeffs_, std::min(t, duration_));
+	VectorXd state = evalaluateStateAt(S_coeffs_, D_coeffs_, std::min(t, durationS_));
 
 	// model with acceleration = 0
-	if (t > duration_)
+	if (t > durationS_)
 	{
-		const double dt = t - duration_;
+		const double dt = t - durationS_;
 		state(0) += state(1) * dt;
 		state(3) += state(4) * dt;
 	}
 
 	return state;
+}*/
+
+
+VectorXd Trajectory::EvaluateStateAt(double time) const
+{
+	double t = time - timeStart_;
+//	VectorXd state = evalaluateStateAt(S_coeffs_, D_coeffs_, std::min(t, durationS_));
+	VectorXd stateS = calc_polynomial_at (S_coeffs_, std::min(t, durationS_));
+	VectorXd stateD = calc_polynomial_at (D_coeffs_, std::min(t, durationD_));
+
+	// model with acceleration = 0
+	if (t > durationS_)
+	{
+		stateS(0) += stateS(1) * (t - durationS_);
+	}
+
+	if (t > durationD_)
+	{
+		stateD(0) += stateD(1) * (t - durationD_);
+	}
+
+	VectorXd state(6);
+	state << stateS, stateD;
+	return state;
 }
 
-
+/*
 VectorXd Trajectory::evalaluateStateAt(const Eigen::VectorXd& s_coeffsV6, const Eigen::VectorXd& d_coeffsV6, double time)
 {
 	VectorXd state = VectorXd::Zero(6);
 	state << calc_polynomial_at(s_coeffsV6, time), calc_polynomial_at(d_coeffsV6, time);
 	return state;
-}
+}*/
 
 
 VectorXd Trajectory::CalcQuinticPolynomialCoeffs(const VectorXd& startStateX3, const VectorXd& endStateX3, double T)
@@ -223,7 +249,7 @@ Eigen::VectorXd Trajectory::calc_s_polynomial_velocity_keeping(const Eigen::Vect
 
 
 // Calculate Jerk cost function for evaluated trajectory points as array of vectors like [s, s_d, s_dd, d, d_d, d_dd].
-double Trajectory::jerkCost_SD(double timeDuration, double& maxJs, double& maxJd)
+double Trajectory::CalcJerkCost(double timeDuration, double& maxJs, double& maxJd)
 {
 	// See: https://d17h27t6h515a5.cloudfront.net/topher/2017/July/595fd482_werling-optimal-trajectory-generation-for-dynamic-street-scenarios-in-a-frenet-frame/werling-optimal-trajectory-generation-for-dynamic-street-scenarios-in-a-frenet-frame.pdf
 
@@ -263,7 +289,7 @@ std::pair<double, double> Trajectory::MinMaxVelocity_S()
 		MinDoubleVal//std::numeric_limits<double>::min()
 	);
 
-	for (double t = 0; t < duration_; t += dt_)
+	for (double t = 0; t < durationS_; t += dt_)
 	{
 		const double v = calc_polynomial_velocity_at(S_coeffs_, t);
 		minMax.first = std::min(v, minMax.first);
@@ -274,7 +300,7 @@ std::pair<double, double> Trajectory::MinMaxVelocity_S()
 }
 
 
-double Trajectory::velocityCost_S(double targetVelocity, double timeDuration) const
+double Trajectory::CalcVelocityCost(double targetVelocity, double timeDuration) const
 {
 //	PrintState();
 
@@ -284,12 +310,10 @@ double Trajectory::velocityCost_S(double targetVelocity, double timeDuration) co
 
 	for (int i = 0; i < points; i++)
 	{
-		const double v = calc_polynomial_velocity_at(S_coeffs_, std::min(t, duration_));
-		double prec_cost = Cost;
+		const double vs = calc_polynomial_velocity_at(S_coeffs_, std::min(t, durationS_));
+		const double vd = calc_polynomial_velocity_at(D_coeffs_, std::min(t, durationD_));
+		const double v = std::sqrt(vs*vs + vd*vd);
 		Cost += std::pow(targetVelocity - v, 2);
-
-//		std::cout << " v: " << v << std::endl;
-
 		t += cost_dt_;
 	}
 
@@ -299,12 +323,12 @@ double Trajectory::velocityCost_S(double targetVelocity, double timeDuration) co
 
 // Calculates minimum distance to specified trajectory.
 // Returns pair like { min-distance, time }.
-std::pair<double, double> Trajectory::CalcMinDistanceToTrajectory(const TrajectoryPtr trajectory, double timeStep/* = delta_t*/) const
+/*std::pair<double, double> Trajectory::CalcMinDistanceToTrajectory(const TrajectoryPtr trajectory, double timeStep) const
 {
 	double minDist = MaxDoubleVal;
 	double minDistTime = 0;
 
-	const double timeEnd = timeStart_ + duration_;
+	const double timeEnd = timeStart_ + durationS_;
 
 	for (double t = timeStart_; t < timeEnd; t += timeStep)
 	{
@@ -319,7 +343,7 @@ std::pair<double, double> Trajectory::CalcMinDistanceToTrajectory(const Trajecto
 	}
 
 	return std::pair<double, double>(minDist, minDistTime);
-}
+}*/
 
 
 // Generates trajectory as matrix s2 of rows[s, d, vs, vd]
@@ -350,7 +374,7 @@ void Trajectory::PrintState() const
 {
 	std::cout << "StartT: " << timeStart_
 		<< " ----------- " << std::endl
-		<< " Dursation: " << duration_
+		<< " Dursation: " << durationS_
 		<< " ----------- " << endl
 		<< " StartState: " << startState_
 		<< " ----------- " << endl
@@ -366,7 +390,7 @@ void Trajectory::PrintInfo()
 {
 	const std::pair<double, double>& MinMaxV = MinMaxVelocity_S();
 
-	std::cout << "T: " << timeStart_
+	std::cout //<< "T: " << timeStart_
 		<< " DC: " << getSafetyDistanceCost()
 		<< " VC: " << getVelocityCost()
 		<< " JC: " << getJerkCost()

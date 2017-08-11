@@ -4,6 +4,7 @@
 #include "Trajectory.h"
 #include "KalmanFilter.h"
 
+
 class OtherVehicle
 {
 public:
@@ -26,6 +27,10 @@ public:
 private:
 	KalmanFilter m_kalmanFilter;
 };
+
+
+using TOtherVehicles = std::vector<OtherVehicle>;
+using TOtherCarsTrajectory = std::vector<Eigen::MatrixXd>;
 
 
 //---------------------------------------------------------------------------------------

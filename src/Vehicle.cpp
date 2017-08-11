@@ -66,7 +66,7 @@ void Vehicle::updateTrajectory(const CarLocalizationData& newState,
 	sensorFusion_.update(sf_data_, currStateV6_(0), map_);
 	sensorFusion_.predict(delayTime);
 
-	TrajectoryPtr pTraj = behavior_.optimalTrajectory(currStateV6_, currTime_, sensorFusion_);
+	TrajectoryPtr pTraj = m_behavior.optimalTrajectory(currStateV6_, currTime_, sensorFusion_);
 
 #ifdef VERBOSE_NEXT_XY
 	cout << "------- Driving path ----------" << endl;
