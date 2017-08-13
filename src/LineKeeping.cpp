@@ -149,7 +149,7 @@ std::tuple<VehicleState*, TrajectoryPtr> LineKeeping::optimalTrajectory( const E
 #endif // #ifdef VERBOSE_BEST_TRAJECTORY
 
 
-//	pOptimalTraj->PrintInfo();
+	pOptimalTraj->PrintInfo();
 
 	return tuple<VehicleState*, TrajectoryPtr>(pNextState, pOptimalTraj);
 }

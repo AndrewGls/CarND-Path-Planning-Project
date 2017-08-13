@@ -416,6 +416,68 @@ double Trajectory::CalcSaferyDistanceCost(const MatrixXd& s2, double timeDuratio
 	return Cost / points;
 }
 
+
+static double CostFunction(double aDistance, double minDistance, double kSafetyDistance, double koeff = 2)
+{
+	const double a = -koeff;
+	const double eMD = std::exp(a * minDistance);
+	const double eSD = std::exp(a * kSafetyDistance);
+	const double eD = std::exp(a * aDistance);
+	return (0.95*eD + 0.05*eMD - eSD) / (eMD - eSD);
+}
+
+inline double CalcLongitudialDistanceCost(double dist, double velocity)
+{
+	const double longMinDist = 10;
+	const double longSafetyDist = 1.2 * velocity;
+	if (dist > longSafetyDist)
+		return 0;
+	return CostFunction(dist, longMinDist, longSafetyDist);
+}
+
+inline double CalcLateralDistanceCost(double dist)
+{
+	const double latMinDist = 2;
+	const double latSafetyDist = 3.75;
+	if (dist > dist)
+		return 0;
+	return CostFunction(dist, latMinDist, latSafetyDist);
+}
+
+inline double Trajectory::calcSafetyDistanceCost(double longitudinalDist, double lateralDist, double velocity) const
+{
+//	const double longMinDist = 10;
+//	const double longSafetyDist = 1.2 * aVelocity;
+//	double longitudialCost = CostFunction(aLongitudinalDistance, longMinDist, longSafetyDist);
+	double longitudialCost = CalcLongitudialDistanceCost(longitudinalDist, velocity);
+
+//	const double latMinDist = 2;
+//	const double latSafetyDist = 3.75;
+//	double lateralCost = CostFunction(aLateralDistance, latMinDist, latSafetyDist);
+	double lateralCost = CalcLateralDistanceCost(lateralDist);
+
+	if (lateralDist > 4)
+	{
+		// other car on the next lane.
+		return 0;
+	}
+
+	if (longitudinalDist < 4.5)
+	{
+		if (lateralDist > 2)
+		{
+			return lateralCost;
+		}
+		else
+		{
+			// already crashed!
+			return 1000;
+		}
+	}
+
+	return longitudialCost;
+}
+
 /*
 void Trajectory::PrintState() const
 {

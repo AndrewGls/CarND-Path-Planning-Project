@@ -17,7 +17,7 @@ tuple<VehicleState*, TrajectoryPtr> LaneChanging::optimalTrajectory(const Eigen:
 											const SensorFusion& rSF)
 {
 #ifdef VERBOSE_STATE
-	std::cout << " Change Lane State " << std::endl;
+//	std::cout << " Change Lane State " << std::endl;
 #endif
 
 	const int maxT = 10;
@@ -72,7 +72,7 @@ tuple<VehicleState*, TrajectoryPtr> LaneChanging::optimalTrajectory(const Eigen:
 	cout << "------- Best ----------" << endl;
 #endif // #ifdef VERBOSE_BEST_TRAJECTORY
 
-//	pOptimalTraj->PrintInfo();
+	pOptimalTraj->PrintInfo();
 
 	return tuple<VehicleState*, TrajectoryPtr>(pNextState, pOptimalTraj);
 }
