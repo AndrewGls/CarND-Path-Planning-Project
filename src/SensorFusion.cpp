@@ -8,7 +8,6 @@
 
 using namespace std;
 
-
 void SensorFusion::predict(double deltaTime)
 {
 	for (auto& elem : m_mapVehicles)
