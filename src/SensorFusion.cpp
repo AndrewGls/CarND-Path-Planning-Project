@@ -64,10 +64,10 @@ void SensorFusion::update(const vector<SensorFusionData>& sensorFusion, double c
 }
 
 
-TOtherCarsTrajectory SensorFusion::GetOtherCarTrajectoryInLane(const Eigen::VectorXd& currStateV6, int nLane, double timeDuration, double timeStep) const
+TOtherCarsTrajectory SensorFusion::GetOtherCarsTrajectoryInLane(const Eigen::VectorXd& currStateV6, int nLane, double timeDuration, double timeStep) const
 {
 	TOtherCarsTrajectory otherTrajectories;
-	auto OtherCars = getNearestVehiclesInLane(currStateV6, nLane);
+	auto OtherCars = GetNearestCarsInLane(currStateV6, nLane);
 	for (OtherVehicle& car : OtherCars)
 	{
 		otherTrajectories.push_back(car.PredictedTrajectory(timeStep, timeDuration));
@@ -76,14 +76,14 @@ TOtherCarsTrajectory SensorFusion::GetOtherCarTrajectoryInLane(const Eigen::Vect
 }
 
 
-TOtherVehicles SensorFusion::getLeadingVehiclesInLane (const Eigen::VectorXd& sdcStateV6, bool bOnlyNearest) const
+TOtherVehicles SensorFusion::GetLeadingCarsInLane (const Eigen::VectorXd& sdcStateV6, bool bOnlyNearest) const
 {
 	TOtherVehicles leading_cars;
 	leading_cars.reserve(20);
 
 	const auto s = sdcStateV6(0);
 	const auto d = sdcStateV6(3);
-	const int lane = Utils::getLaneNumberForD(d);
+	const int lane = Utils::DtoLaneNumber(d);
 
 	for (const auto& elem : m_mapVehicles)
 	{
@@ -100,12 +100,10 @@ TOtherVehicles SensorFusion::getLeadingVehiclesInLane (const Eigen::VectorXd& sd
 #endif // VERBOSE_OTHER_IGNORED_CARS
 	}
 
+	// sorts by ascending S
+	sort(leading_cars.begin(), leading_cars.end(), [](const OtherVehicle& l, const OtherVehicle& r) { return l.get_s() < r.get_s(); });
 	if (bOnlyNearest)
-	{
-		// sorts by ascending S
-		sort(leading_cars.begin(), leading_cars.end(), [](const OtherVehicle& l, const OtherVehicle& r) { return l.get_s() < r.get_s(); });
 		leading_cars.resize(1);
-	}
 
 #ifdef VERBOSE_OTHER_LEADING_CARS
 	for (const auto car : leading_cars)
@@ -121,7 +119,7 @@ TOtherVehicles SensorFusion::getLeadingVehiclesInLane (const Eigen::VectorXd& sd
 	return leading_cars;
 }
 
-TOtherVehicles SensorFusion::getNearestVehiclesInLane(const Eigen::VectorXd& sdcStateV6, int nLane, double deltaS) const
+TOtherVehicles SensorFusion::GetNearestCarsInLane(const Eigen::VectorXd& sdcStateV6, int nLane, double deltaS) const
 {
 	TOtherVehicles leading_cars;
 

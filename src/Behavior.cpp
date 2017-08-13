@@ -27,11 +27,17 @@ TrajectoryPtr Behavior::optimalTrajectory (const VectorXd& currStateX6, double c
 
 	if (!pNewState)
 	{
+#ifdef VERBOSE_STATE
+		std::cout << " Removing Change Lane State " << std::endl;
+#endif
 		assert(m_states.size() == 2);
 		m_states.pop_back();
 	}
 	else if (pNewState != pCurrState)
 	{
+#ifdef VERBOSE_STATE
+		std::cout << " Adding Change Lane State " << std::endl;
+#endif
 		assert(m_states.size() == 1);
 		m_states.push_back(VehicleStatePtr(pNewState));
 	}

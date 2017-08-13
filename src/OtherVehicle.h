@@ -10,7 +10,7 @@ class OtherVehicle
 public:
 	OtherVehicle(double s = 0, double d = 0, double vs = 0);
 
-	int    get_lane() const { return Utils::getLaneNumberForD(get_d()); }
+	int    get_lane() const { return Utils::DtoLaneNumber(get_d()); }
 	bool   isInlane(int lane) const { return lane == get_lane() && lane != -1; }
 
 	double get_s() const { return m_kalmanFilter.s(); }

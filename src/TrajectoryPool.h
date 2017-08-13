@@ -13,9 +13,12 @@ class TrajectoryPool
 public:
 	using TPool = std::deque<TrajectoryPtr>;
 
-	TrajectoryPool(const TOtherCarsTrajectory& otherTrajectories, double speedLimit, double timeHorizon);
+	TrajectoryPool(double speedLimit, double timeHorizon);
 
+	void setOtherCars(const TOtherCarsTrajectory& otherTrajectories);
+	void addOtherCars(const TOtherCarsTrajectory& otherTrajectories);
 	void addTrajectory(TrajectoryPtr traj);
+
 	TrajectoryPtr optimalTrajectory() const;
 
 	const TPool getPool() const { return m_pool; }
@@ -34,6 +37,7 @@ private:
 	constexpr static double m_MaxJerkS = 100;
 
 	static constexpr double JerkCostWeight = 0.5;// 0.01;
+	static constexpr double AccelCostWeight = 1;
 	static constexpr double VelocityCostWeight = 0.5;
 	static constexpr double TimeCostWeight = 0;// 100;
 	static constexpr double SaferyDistCostWeight = 1000;

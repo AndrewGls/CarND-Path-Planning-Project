@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Types.h"
+#include "Utils.hpp"
 #include <vector>
 #include <memory>
 #include <utility>
@@ -38,7 +39,8 @@ public:
 	// Returns pair like { min-distance, time }.
 //	std::pair<double, double> CalcMinDistanceToTrajectory(const TrajectoryPtr otheTraj, double timeStep = delta_t) const;
 	
-	double calcSaferyDistanceCost(const Eigen::MatrixXd& s2, double timeDuration) const;
+	double CalcSaferyDistanceCost(const Eigen::MatrixXd& s2, double timeDuration) const;
+	double CalcLaneOffsetCost(double timeDuration) const { return 0; }
 
 	// Returns trajectory duration in seconds.
 	double getDurationS() const { return durationS_; }
@@ -47,27 +49,31 @@ public:
 
 	double getTargetS() const { return endState_(0); }
 	double getTargetD() const { return endState_(3); }
+	double getStartD() const { return startState_(3); }
 
 	double getTotalCost() const { return cost_.sum(); }
 
 	void setTimeCost (double cost)			{ cost_(0) = cost; }
 	void setJerkCost (double cost)			{ cost_(1) = cost; }
-	void setVelocityCost (double cost)		{ cost_(2) = cost; }
-	void setSafetyDistanceCost (double cost)	{ cost_(3) = cost; }
+	void setAccelCost(double cost)			{ cost_(2) = cost; }
+	void setVelocityCost (double cost)		{ cost_(3) = cost; }
+	void setSafetyDistanceCost (double cost)	{ cost_(4) = cost; }
 
 	double getTimeCost() const			{ return cost_(0); }
 	double getJerkCost() const			{ return cost_(1); }
-	double getVelocityCost() const		{ return cost_(2); }
-	double getSafetyDistanceCost() const { return cost_(3); }
+	double getAccelCost() const			{ return cost_(2); }
+	double getVelocityCost() const		{ return cost_(3); }
+	double getSafetyDistanceCost() const { return cost_(4); }
 
 
 	// Calculation of cost functions.
 	// See: https://d17h27t6h515a5.cloudfront.net/topher/2017/July/595fd482_werling-optimal-trajectory-generation-for-dynamic-street-scenarios-in-a-frenet-frame/werling-optimal-trajectory-generation-for-dynamic-street-scenarios-in-a-frenet-frame.pdf
 
 	// Calculate Jerk cost function for evaluated trajectory points as array of vectors like [s, s_d, s_dd, d, d_d, d_dd].
-	double CalcJerkCost(double timeDuration, double& maxJs, double& maxJd);
+	double CalcJerkCost(double timeDuration, double& maxJs, double& maxJd) const;
+	double CalcAccelCost(double timeDuration) const;
 	double CalcVelocityCost(double targetVelocity, double timeDuration) const;
-	std::pair<double, double> MinMaxVelocity_S();
+	std::pair<double, double> MinMaxVelocity_S() const;
 
 	void PrintInfo();
 
@@ -89,10 +95,9 @@ private:
 	inline double calc_polynomial_jerk_at (const Eigen::VectorXd& coeffsX6, double t) const;
 	inline double calc_polynomial_accel_at(const Eigen::VectorXd& coeffsX6, double t) const;
 	inline double calc_polynomial_velocity_at (const Eigen::VectorXd& coeffsX6, double t) const;
+	inline double calc_polynomial_distance_at(const Eigen::VectorXd& coeffsX6, double t) const;
 
 	double calcSafetyDistanceCost(double Sdist, double Ddist, double velocity) const;
-	double calcLongitudialSafetyDistanceCost(double Sdist, double velocity) const;
-	double calcLateralSafetyDistanceCost(double Ddist) const;
 
 	// Calculate Jerk optimal polynomial for S-trajectory with keeping velocity, using current S start-state [s, s_d, s_dd], 
 	// target velocity m/s and specified duration T in sec.
@@ -106,7 +111,7 @@ private:
 	double dt_ = delta_t;	// time step along a trajectory
 	double cost_dt_ = 0.1;  // time step along a trajectory used during evaluation of trajectory-cost.
 
-	Eigen::VectorXd cost_{ Eigen::VectorXd::Zero(4) };
+	Eigen::VectorXd cost_{ Eigen::VectorXd::Zero(5) };
 
 	Eigen::VectorXd startState_; // [s, s_dot, s_ddot, d, d_dot, d_ddot]
 	Eigen::VectorXd endState_;   // [s, s_dot, s_ddot, d, d_dot, d_ddot]
@@ -163,94 +168,68 @@ inline double Trajectory::calc_polynomial_velocity_at(const Eigen::VectorXd& a, 
 	return a(1) + 2. * a(2) * t + 3. * a(3) * t2 + 4. * a(4) * t3 + 5. * a(5) * t4;
 }
 
+inline double Trajectory::calc_polynomial_distance_at(const Eigen::VectorXd& a, double t) const
+{
+	// s(t) = a0 + a1 * t + a2 * t^2 + a3 * t^3 + a4 * t^4 + a5 * t^5
+	// s_d(t) = a1 + 2*a2 * t + 3*a3 * t^2 + 4*a4 * t^3 + 5*a5 * t^4
+	// s_dd(t) = 2*a2 + 6*a3 * t^1 + 12*a4 * t^2 + 20*a5 * t^3
+
+	const auto t2 = t * t;
+	const auto t3 = t2 * t;
+	const auto t4 = t3 * t;
+	const auto t5 = t4 * t;
+
+	// calculate s_d(t)
+	return a(0) + a(1) * t + a(2) * t2 + a(3) * t3 + a(4) * t4 + a(5) * t5;
+}
+
 /*
 inline double logistic(double x)
 {
 	return 2. / (1 + exp(-x)) - 1.;
 }*/
 
-/*
-inline double Trajectory::calcLongitudialSafetyDistanceCost(double Sdist, double velocity) const
-{
-	//const auto safetyDist = Utils::braking_distance(velocity);
-	constexpr double D0 = 2; // safety distance, known as constant time gap law.
-	constexpr double tau = 1.8;
-	const auto safetyDist = D0 + tau * velocity;
 
-	if (Sdist > safetyDist)
-		return 0.0;
-
-	// https://www.desmos.com/calculator/q2akbfqxkb
-	return std::exp(Sdist * std::log(0.08) / (safetyDist - D0));
-}
-*/
-inline double Trajectory::calcLongitudialSafetyDistanceCost(double aDistance, double aVelocity) const
+inline double CostFunction(double aDistance, double minDistance, double kSafetyDistance)
 {
-	const double kSafetyDistance = aVelocity * 3.6 / 2.0;
-	if (aDistance > 1.25 * kSafetyDistance)
-	{
-		return 0.0;
-	}
-	else
-	{
-		return std::exp(-aDistance / (-kSafetyDistance / std::log(0.1)));
-	}
+	if (aDistance > kSafetyDistance)
+		return 0;
+
+	const double a = -2;
+	const double eMD = std::exp(a * minDistance);
+	const double eSD = std::exp(a * kSafetyDistance);
+	const double eD = std::exp(a * aDistance);
+	return (0.95*eD + 0.05*eMD - eSD) / (eMD - eSD);
 }
 
-inline double Trajectory::calcLateralSafetyDistanceCost(double Ddist) const
+inline double Trajectory::calcSafetyDistanceCost(double aLongitudinalDistance, double aLateralDistance, double aVelocity) const
 {
-	constexpr double safetyDist = 1.5;
-	if (Ddist > 1.25 * safetyDist)
+	const double longMinDist = 10;
+	const double longSafetyDist = 1.2 * aVelocity;
+	double longitudialCost = CostFunction(aLongitudinalDistance, longMinDist, longSafetyDist);
+
+	const double latMinDist = 2;
+	const double latSafetyDist = 3.75;
+	double lateralCost = CostFunction(aLateralDistance, latMinDist, latSafetyDist);
+
+	if (aLateralDistance > 4)
 	{
+		// other car on the next lane.
 		return 0;
-	}
-	return std::exp(-Ddist / (-safetyDist / std::log(0.1)));
-}
-
-inline double Trajectory::calcSafetyDistanceCost(double Sdist, double Ddist, double velocity) const
-{
-	const double longitudinalDistCost = calcLongitudialSafetyDistanceCost(Sdist, velocity);
-	const double lateralDistCost = calcLateralSafetyDistanceCost(Ddist);
-
-	if (longitudinalDistCost < 4)
-	{
-		// crash!
-//		return 1000;
-	}
-
-//	DE_D_MIN = 1.e9;
-//	DE_D_MAX = -1.e9;
-
-//	DE_D_MIN = std::max(DE_D_MIN, Ddist);
-//	DE_D_MAX = std::max(DE_D_MAX, lateralDistCost);
-
-/*	if (lateralDistCost > 1.5)
-	{
-		return 0;
-	}
-
-	if (longitudinalDistCost != 0 && lateralDistCost != 0)
-	{
-		std::cout << "-----------------------" << std::endl;
-		std::cout << "Sd: " << Sdist
-			<< " fS: " << longitudinalDistCost
-			<< " Dd: " << Ddist
-			<< " fd: " << lateralDistCost
-			<< std::endl;
-		std::cout << "-----------------------" << std::endl;
-	}*/
-
-	return longitudinalDistCost;
-
-	//-------------------------------------------------------------------
-	if (lateralDistCost > 1.5)
-	{
-		return 0;
-	}
-	else if (longitudinalDistCost < 2)
-	{
-		return std::max(longitudinalDistCost, lateralDistCost);
 	}
 	
-	return longitudinalDistCost;
+	if (aLongitudinalDistance < 4.5)
+	{
+		if (aLateralDistance > 2)
+		{
+			return lateralCost;
+		}
+		else
+		{
+			// already crashed!
+			return 1000;
+		}
+	}
+
+	return longitudialCost;
 }

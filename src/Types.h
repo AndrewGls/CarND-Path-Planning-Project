@@ -5,11 +5,13 @@
 #include <limits>
 
 //#define VERBOSE_NEXT_XY
-//#define VERBOSE_BEST_TRAJECTORY
-//#define VERBOSE_LINE_KEEPING
+#define VERBOSE_BEST_TRAJECTORY
+//#define VERBOSE_TRAJECTORIES
 //#define VERBOSE_OTHER_CARS_CHECK_TRANSFORM
 //#define VERBOSE_OTHER_LEADING_CARS
 //#define VERBOSE_OTHER_IGNORED_CARS
+
+#define VERBOSE_STATE
 
 static constexpr double MaxDoubleVal = 1.e10;
 static constexpr double MinDoubleVal = -1.e10;

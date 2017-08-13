@@ -46,10 +46,11 @@ TrajectoryPtr Trajectory::VelocityKeeping_STrajectory( const VectorXd& currState
 													   double timeDurationD)
 {
 	TrajectoryPtr pTraj = std::make_shared<Trajectory>();
+	pTraj->timeStart_ = currTime;
+	pTraj->durationS_ = timeDurationS;
+	pTraj->durationD_ = timeDurationD;
 	pTraj->startState_  = currStateX6;
 	pTraj->endState_(3) = endD;
-	pTraj->timeStart_   = currTime;
-	pTraj->durationS_    = timeDurationS;
 
 	const double currD = currStateX6(3);
 
@@ -249,7 +250,7 @@ Eigen::VectorXd Trajectory::calc_s_polynomial_velocity_keeping(const Eigen::Vect
 
 
 // Calculate Jerk cost function for evaluated trajectory points as array of vectors like [s, s_d, s_dd, d, d_d, d_dd].
-double Trajectory::CalcJerkCost(double timeDuration, double& maxJs, double& maxJd)
+double Trajectory::CalcJerkCost(double timeDuration, double& maxJs, double& maxJd) const
 {
 	// See: https://d17h27t6h515a5.cloudfront.net/topher/2017/July/595fd482_werling-optimal-trajectory-generation-for-dynamic-street-scenarios-in-a-frenet-frame/werling-optimal-trajectory-generation-for-dynamic-street-scenarios-in-a-frenet-frame.pdf
 
@@ -263,14 +264,21 @@ double Trajectory::CalcJerkCost(double timeDuration, double& maxJs, double& maxJ
 	// so, for the sake of clearness, we used klat << klon.
 
 	const double Ws = 1.;
-	const double Wd = 2.;
+	const double Wd = 1.;// 2.;
 
 	const int points = static_cast<int>(timeDuration / cost_dt_);
 
 	for (double t = 0; t < timeDuration; t += cost_dt_)
 	{
-		const double Js = calc_polynomial_jerk_at(S_coeffs_, std::min(t, timeDuration));
-		const double Jd = calc_polynomial_jerk_at(D_coeffs_, std::min(t, timeDuration));
+		const double Js = calc_polynomial_jerk_at(S_coeffs_, std::min(t, durationS_));
+		const double Jd = calc_polynomial_jerk_at(D_coeffs_, std::min(t, durationD_));
+
+/*		std::cout
+			<< " t: " << t
+			<< " Js: " << Js
+			<< " Jd: " << Jd
+			<< std::endl;*/
+
 		Cs += Js*Js;
 		Cd += Jd*Jd;
 
@@ -282,7 +290,31 @@ double Trajectory::CalcJerkCost(double timeDuration, double& maxJs, double& maxJ
 }
 
 
-std::pair<double, double> Trajectory::MinMaxVelocity_S()
+double Trajectory::CalcAccelCost(double timeDuration) const
+{
+	double cost = 0;
+	const double points = timeDuration / cost_dt_;
+
+	for (double t = 0; t < timeDuration; t += cost_dt_)
+	{
+		const double as = calc_polynomial_accel_at(S_coeffs_, std::min(t, durationS_));
+		const double ad = calc_polynomial_accel_at(D_coeffs_, std::min(t, durationD_));
+		cost += as*as + ad*ad;
+
+/*		std::cout
+		<< " t: " << t
+		<< " As: " << as
+		<< " Ad: " << ad
+		<< " C: " << cost
+			<< std::endl;
+			*/
+	}
+
+	return cost / points;
+}
+
+
+std::pair<double, double> Trajectory::MinMaxVelocity_S() const
 {
 	std::pair<double, double> minMax(
 		MaxDoubleVal,// std::numeric_limits<double>::max(),
@@ -312,9 +344,24 @@ double Trajectory::CalcVelocityCost(double targetVelocity, double timeDuration) 
 	{
 		const double vs = calc_polynomial_velocity_at(S_coeffs_, std::min(t, durationS_));
 		const double vd = calc_polynomial_velocity_at(D_coeffs_, std::min(t, durationD_));
-		const double v = std::sqrt(vs*vs + vd*vd);
+		double v = std::sqrt(vs*vs + vd*vd);
+
+		if (v >= targetVelocity)
+		{
+			// fix for simulator - speed jumps up!
+			v = 1e6; 
+		}
+
 		Cost += std::pow(targetVelocity - v, 2);
 		t += cost_dt_;
+/*
+		std::cout
+			<< " t: " << t
+			<< " vs: " << vs
+			<< " vd: " << vd
+			<< " Cost: " << Cost
+			<< std::endl;
+			*/
 	}
 
 	return Cost / points;
@@ -346,13 +393,13 @@ double Trajectory::CalcVelocityCost(double targetVelocity, double timeDuration) 
 }*/
 
 
-// Generates trajectory as matrix s2 of rows[s, d, vs, vd]
-double Trajectory::calcSaferyDistanceCost(const MatrixXd& s2, double timeDuration) const
+double Trajectory::CalcSaferyDistanceCost(const MatrixXd& s2, double timeDuration) const
 {
 	double Cost = 0;
+	const double dt = cost_dt_;
 
 	double t = timeStart_;
-	const int points = static_cast<int>(timeDuration / cost_dt_);
+	const int points = static_cast<int>(timeDuration / dt);
 
 	for (int i = 0; i < points; i++)
 	{
@@ -363,7 +410,7 @@ double Trajectory::calcSaferyDistanceCost(const MatrixXd& s2, double timeDuratio
 
 		Cost += calcSafetyDistanceCost(Sdist, Ddist, velocity);
 
-		t += cost_dt_;
+		t += dt;
 	}
 
 	return Cost / points;
@@ -391,10 +438,12 @@ void Trajectory::PrintInfo()
 	const std::pair<double, double>& MinMaxV = MinMaxVelocity_S();
 
 	std::cout //<< "T: " << timeStart_
+		<< " startD: " << getStartD()
+		<< " endD: " << getTargetD()
+		<< " C: " << getTotalCost()
 		<< " DC: " << getSafetyDistanceCost()
 		<< " VC: " << getVelocityCost()
 		<< " JC: " << getJerkCost()
-		<< " C: " << getTotalCost()
 		<< " v_min: " << MinMaxV.first
 		<< " v_max: " << MinMaxV.second
 		<< endl;

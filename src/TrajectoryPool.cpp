@@ -6,11 +6,22 @@
 using namespace std;
 
 
-TrajectoryPool::TrajectoryPool(const TOtherCarsTrajectory& otherTrajectories, double speedLimit, double timeHorizon)
-	: m_otherTrajectories(otherTrajectories)
-	, m_SpeedLimit(speedLimit)
+TrajectoryPool::TrajectoryPool(double speedLimit, double timeHorizon)
+	:m_SpeedLimit(speedLimit)
 	, m_HorizontPrediction(timeHorizon)
 {
+}
+
+
+void TrajectoryPool::setOtherCars(const TOtherCarsTrajectory& otherTrajectories)
+{
+	m_otherTrajectories = otherTrajectories;
+}
+
+
+void TrajectoryPool::addOtherCars(const TOtherCarsTrajectory& otherTrajectories)
+{
+	m_otherTrajectories.insert(m_otherTrajectories.end(), otherTrajectories.begin(), otherTrajectories.end());
 }
 
 
@@ -44,6 +55,7 @@ void TrajectoryPool::calcTrajectoryCost(TrajectoryPtr pTraj)
 	double maxJs, maxJd;
 	const double TimeCost = TimeCostWeight * pTraj->getDurationS();
 	double       JerkCost = JerkCostWeight * pTraj->CalcJerkCost(m_HorizontPrediction, maxJs, maxJd);
+	const double AccelCost = AccelCostWeight * pTraj->CalcAccelCost(m_HorizontPrediction);
 
 	const std::pair<double, double>& MinMaxVelocity = pTraj->MinMaxVelocity_S();
 	double VelocityCost = VelocityCostWeight * pTraj->CalcVelocityCost(m_SpeedLimit, m_HorizontPrediction);
@@ -62,7 +74,7 @@ void TrajectoryPool::calcTrajectoryCost(TrajectoryPtr pTraj)
 
 	for (const auto& otherTraj : m_otherTrajectories)
 	{
-		const double safetyDistCost = pTraj->calcSaferyDistanceCost(otherTraj, m_HorizontPrediction);
+		const double safetyDistCost = pTraj->CalcSaferyDistanceCost(otherTraj, m_HorizontPrediction);
 		MaxSaferyDistCost = std::max(MaxSaferyDistCost, safetyDistCost);
 	}
 
@@ -70,27 +82,30 @@ void TrajectoryPool::calcTrajectoryCost(TrajectoryPtr pTraj)
 
 	pTraj->setTimeCost(TimeCost);
 	pTraj->setJerkCost(JerkCost);
+	pTraj->setAccelCost(AccelCost);
 	pTraj->setVelocityCost(VelocityCost);
 	pTraj->setSafetyDistanceCost(SaferyDistCost);
 
 
-#ifdef VERBOSE_LINE_KEEPING
+#ifdef VERBOSE_TRAJECTORIES
 	Eigen::VectorXd currStateV6 = pTraj->getStartState();
-	cout //<< "s: " << pTraj->getStartState()(0)
-		//<< " d: " << currStateX6(3)
+	cout //<< "sD: " << pTraj->getStartD()
+		//<< " eD: " << pTraj->getTargetD()
 		<< " v: " << pTraj->DE_V
 		<< " T: " << pTraj->getDurationS()
-		<< " Jc: " << JerkCost
-		<< " Vc: " << VelocityCost
-		//<< " C: " << pTraj->getTotalCost()
+		<< " C: " << pTraj->getTotalCost()
+		<< " Jc: " << pTraj->getJerkCost()
+		<< " Ac: " << pTraj->getAccelCost()
+		<< " Vc: " << pTraj->getVelocityCost()
 		<< " DC: " << SaferyDistCost
+		<< " SH: " << pTraj->getLaneOffsetCost()
 		<< " Vmin: " << MinMaxVelocity.first
 		<< " Vmax: " << MinMaxVelocity.second
-			<< " cars: " << m_otherTrajectories.size()
+//			<< " cars: " << m_otherTrajectories.size()
 //		<< " D_MIN: " << pTraj->DE_D_MIN
 //		<< " D_MAX: " << pTraj->DE_D_MAX
 << endl;
-#endif // VERBOSE_LINE_KEEPING
+#endif // VERBOSE_TRAJECTORIES
 
 //	pTraj->PrintInfo();
 

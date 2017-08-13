@@ -78,7 +78,7 @@
     <ClCompile Include="..\src\VehicleState.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ChangeLane.cpp">
+    <ClCompile Include="..\src\LaneChanging.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -161,7 +161,7 @@
     <ClInclude Include="..\src\KalmanFilter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ChangeLane.h">
+    <ClInclude Include="..\src\LaneChanging.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -4,13 +4,17 @@
 
 #include "VehicleState.h"
 
-class ChangeLane : public VehicleState
+class LaneChanging : public VehicleState
 {
 public:
-	ChangeLane() {}
+	LaneChanging(int nStartLane, int nTargetLane);
 
 	virtual std::tuple<VehicleState*, TrajectoryPtr> optimalTrajectory(
 			const Eigen::VectorXd& currStateX6, double currTime, const SensorFusion& sensFusion) override;
+
+private:
+	int m_nStartLane;
+	int m_nTargetLane;
 };
 
 #endif // CHANGE_LANE_H
