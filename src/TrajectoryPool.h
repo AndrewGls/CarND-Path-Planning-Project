@@ -36,7 +36,7 @@ private:
 
 	constexpr static double m_MaxJerkS = 100;
 
-	static constexpr double JerkCostWeight = 0.1;// 0.5;// 0.01;
+	static constexpr double JerkCostWeight = 0.2;// 0.5;// 0.01;
 	static constexpr double AccelCostWeight = 1;
 	static constexpr double VelocityCostWeight = 0.5;
 	static constexpr double TimeCostWeight = 0;// 100;
