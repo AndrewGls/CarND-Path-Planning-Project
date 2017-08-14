@@ -62,6 +62,16 @@ void SensorFusion::Update(const vector<SensorFusionData>& sensorFusion, double c
 	}
 }
 
+TOtherCarsTrajectory SensorFusion::GetLeadingCarsTrajectoryInLane(const Eigen::VectorXd& currStateV6, int nLane, double timeDuration, double timeStep) const
+{
+	TOtherCarsTrajectory trajectories;
+	auto OtherCars = GetLeadingCarsInLane(currStateV6, nLane);
+	for (OtherVehicle& car : OtherCars)
+	{
+		trajectories.push_back(car.PredictedTrajectory(timeStep, timeDuration));
+	}
+	return trajectories;
+}
 
 TOtherCarsTrajectory SensorFusion::GetOtherCarsTrajectoryInLane(const Eigen::VectorXd& currStateV6, int nLane, double timeDuration, double timeStep) const
 {
@@ -75,19 +85,17 @@ TOtherCarsTrajectory SensorFusion::GetOtherCarsTrajectoryInLane(const Eigen::Vec
 }
 
 
-TOtherVehicles SensorFusion::GetLeadingCarsInLane (const Eigen::VectorXd& sdcStateV6, bool bOnlyNearest) const
+TOtherVehicles SensorFusion::GetLeadingCarsInLane (const Eigen::VectorXd& sdcStateV6, int nLane, bool bOnlyNearest) const
 {
 	TOtherVehicles leading_cars;
 	leading_cars.reserve(20);
 
 	const auto s = sdcStateV6(0);
-	const auto d = sdcStateV6(3);
-	const int lane = Utils::DtoLaneNumber(d);
 
 	for (const auto& elem : m_mapVehicles)
 	{
 		const auto& car = elem.second;
-		if (car.Get_S() > s && car.IsInlane(lane))
+		if (car.Get_S() > s && car.IsInlane(nLane))
 		{
 			leading_cars.push_back(car);
 		}

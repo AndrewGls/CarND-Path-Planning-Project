@@ -29,20 +29,16 @@ tuple<VehicleState*, TrajectoryPtr> LaneChanging::OptimalTrajectory(const Eigen:
 
 	TrajectoryPool pool(m_SpeedLimit, m_HorizontPrediction);
 	
-	pool.SetOtherCars(rSF.GetOtherCarsTrajectoryInLane(currStateV6, m_nTargetLane, m_HorizontPrediction, m_TimeStep));
-	pool.AddOtherCars(rSF.GetOtherCarsTrajectoryInLane(currStateV6, m_nStartLane, m_HorizontPrediction, m_TimeStep));
+	pool.SetOtherCars(rSF.GetLeadingCarsTrajectoryInLane(currStateV6, m_nStartLane, m_HorizontPrediction, m_TimeStep));
+	pool.AddOtherCars(rSF.GetOtherCarsTrajectoryInLane(currStateV6, m_nTargetLane, m_HorizontPrediction, m_TimeStep));
 
+	for (double v = 0; v < m_SpeedLimit; v += 1)
 	{
-		for (double v = 0; v < m_SpeedLimit; v += 1)
+		for (double T = 1; T < maxT; T += 1)
 		{
-			for (double T = 1; T < maxT; T += 1)
-			{
-				TrajectoryPtr pTraj = Trajectory::VelocityKeeping_STrajectory(currStateV6, targetD, v, currTime, T, changingLaneTime);
-				pool.AddTrajectory(pTraj);
-			}
+			pool.AddTrajectory(Trajectory::VelocityKeeping_STrajectory(currStateV6, targetD, v, currTime, T, changingLaneTime));
 		}
 	}
-
 
 	VehicleState* pNextState = this;
 	TrajectoryPtr pOptimalTraj = pool.OptimalTrajectory();

@@ -36,7 +36,7 @@ std::tuple<VehicleState*, TrajectoryPtr> LineKeeping::OptimalTrajectory( const E
 	const int nCurrentLane = Utils::DtoLaneNumber(currentD);
 
 	TrajectoryPool pool (m_SpeedLimit, m_HorizontPrediction);
-	TOtherCarsTrajectory CarsOnThisLaneTrajectories = rSF.GetOtherCarsTrajectoryInLane(currStateX6, nCurrentLane, m_HorizontPrediction, m_TimeStep);
+	TOtherCarsTrajectory CarsOnThisLaneTrajectories = rSF.GetLeadingCarsTrajectoryInLane(currStateX6, nCurrentLane, m_HorizontPrediction, m_TimeStep);
 
 	// Generates trajectory to stay in the lane.
 	if (bOnKeepLane)
@@ -46,14 +46,13 @@ std::tuple<VehicleState*, TrajectoryPtr> LineKeeping::OptimalTrajectory( const E
 		{
 			for (double T = 1; T < maxT; T += 1)
 			{
-				TrajectoryPtr pTraj = Trajectory::VelocityKeeping_STrajectory(currStateX6, currentD, v, currTime, T, 0);
-				pool.AddTrajectory(pTraj);
+				pool.AddTrajectory(Trajectory::VelocityKeeping_STrajectory(currStateX6, currentD, v, currTime, T, 0));
 			}
 		}
 	}
 
-	// Changing lane to left trajectory
-	if (nCurrentLane <= 1 && bOnLaneChangingLeft)
+	// Changing lane to right trajectory
+	if (nCurrentLane <= 1 && bOnLaneChangingRight)
 	{
 		const int nTargetLane = nCurrentLane + 1;
 		const double targetD = Utils::LaneNumberToD(nTargetLane);
@@ -65,7 +64,7 @@ std::tuple<VehicleState*, TrajectoryPtr> LineKeeping::OptimalTrajectory( const E
 		}
 		else
 		{
-//			std::cout << " Traj Move to left: " << nTargetLane << std::endl;
+//			std::cout << " Traj Move to right: " << nTargetLane << std::endl;
 			pool.SetOtherCars(std::vector<Eigen::MatrixXd>());
 		}
 
@@ -73,27 +72,14 @@ std::tuple<VehicleState*, TrajectoryPtr> LineKeeping::OptimalTrajectory( const E
 		{
 			for (double T = 1; T < maxT; T += 1)
 			{
-				if (v == 15 && T == 5)
-				{
-					int i = 0;
-				}
-
-/*				std::cout << currStateX6 << std::endl;
-
-				Eigen::VectorXd aCurrentStateTmp = Eigen::VectorXd::Zero(6);
-				//		  aCurrentStateTmp << 124.932, 0, 0, -6.09322, 0, 0;
-				aCurrentStateTmp << 124.932, 10, 0, -6.09322, 0, 0;
-
-				TrajectoryPtr pTraj = Trajectory::VelocityKeeping_STrajectory(aCurrentStateTmp, targetD, 12, currTime, 8, LaneChangingTime);
-				*/
 				TrajectoryPtr pTraj = Trajectory::VelocityKeeping_STrajectory(currStateX6, targetD, v, currTime, T, LaneChangingTime);
 				pool.AddTrajectory(pTraj);
 			}
 		}
 	}
 
-	// Changing lane to right trajectory
-	if (nCurrentLane >= 1 && bOnLaneChangingRight)
+	// Changing lane to left trajectory
+	if (nCurrentLane >= 1 && bOnLaneChangingLeft)
 	{
 		const int nTargetLane = nCurrentLane - 1;
 		const double targetD = Utils::LaneNumberToD(nTargetLane);
@@ -105,7 +91,7 @@ std::tuple<VehicleState*, TrajectoryPtr> LineKeeping::OptimalTrajectory( const E
 		}
 		else
 		{
-//			std::cout << " Traj Move to right: " << nTargetLane << std::endl;
+//			std::cout << " Traj Move to left: " << nTargetLane << std::endl;
 			pool.SetOtherCars(std::vector<Eigen::MatrixXd>());
 		}
 

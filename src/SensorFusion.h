@@ -15,11 +15,14 @@ public:
 	void Predict(double deltaTime);
 	void Update (const std::vector<SensorFusionData>& sensorFusion, double currS, const Waypoints& map);
 
+	// Returns other leading vehicles in the lane which is defined by SDC vehicle state [s, s_d, s_dd, d, d_d, d_dd].
+	TOtherCarsTrajectory GetLeadingCarsTrajectoryInLane(const Eigen::VectorXd& sdcStateV6, int nLane, double timeDuration, double timeStep) const;
+
 	// Returns all vehicles in the lane which are close to SDC car's S-position: [sdcStateV6(0)-deltaS, sdcStateV6(0)+deltaS].
 	TOtherCarsTrajectory GetOtherCarsTrajectoryInLane(const Eigen::VectorXd& sdcStateV6, int nLane, double timeDuration, double timeStep) const;
 
 	// Returns other leading vehicles in the lane which is defined by SDC vehicle state [s, s_d, s_dd, d, d_d, d_dd].
-	TOtherVehicles GetLeadingCarsInLane (const Eigen::VectorXd& sdcStateV6, bool bOnlyNearest = false) const;
+	TOtherVehicles GetLeadingCarsInLane (const Eigen::VectorXd& sdcStateV6, int nLane, bool bOnlyNearest = false) const;
 	// Returns all vehicles in the lane which are close to SDC car's S-position: [sdcStateV6(0)-deltaS, sdcStateV6(0)+deltaS].
 	TOtherVehicles GetNearestCarsInLane(const Eigen::VectorXd& sdcStateV6, int nLane, double deltaS = 200) const;
 
