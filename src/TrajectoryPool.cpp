@@ -65,6 +65,11 @@ void TrajectoryPool::CalcTrajectoryCost(TrajectoryPtr pTraj)
 		VelocityCost += 1000;
 	}
 
+	if (std::abs(maxJs) > m_MaxJerkS || std::abs(maxJd) > m_MaxJerkS)
+	{
+		JerkCost += 1000;
+	}
+
 	double MaxSaferyDistCost = 0;
 
 	for (const auto& otherTraj : m_otherTrajectories)

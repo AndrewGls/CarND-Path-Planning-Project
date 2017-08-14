@@ -31,7 +31,7 @@ private:
 	double m_SpeedLimit;
 	double m_HorizontPrediction;
 
-	constexpr static double m_MaxJerkS = 100;
+	constexpr static double m_MaxJerkS = 9;
 
 	static constexpr double JerkCostWeight = 0.2;// 0.5;// 0.01;
 	static constexpr double AccelCostWeight = 1;

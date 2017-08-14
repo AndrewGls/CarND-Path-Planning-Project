@@ -382,7 +382,7 @@ inline double Trajectory::CalcSafetyDistanceCost(double longitudinalDist, double
 	double longitudialCost = CalcLongitudialDistanceCost(longitudinalDist, velocity);
 	double lateralCost = CalcLateralDistanceCost(lateralDist);
 
-	if (lateralDist > 4)
+	if (lateralDist > 3.8) // 4
 	{
 		// other car on the next lane.
 		return 0;
