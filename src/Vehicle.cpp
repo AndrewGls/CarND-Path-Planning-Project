@@ -1,6 +1,5 @@
 #include "Vehicle.h"
-#include "Waypoint.h"
-#include "HighwayMap.h"
+#include "Waypoints.h"
 #include "SensorFusion.h"
 #include <iostream>
 
@@ -18,7 +17,7 @@ namespace {
 
 
 //////////////////////////////////////////////////////////////////////////////////////////
-Vehicle::Vehicle(const HighwayMap& map)
+Vehicle::Vehicle(const Waypoints& map)
 	: map_(map)
 	, state_(fs_keep_lane)
 	, initDone_(false)
@@ -62,7 +61,7 @@ void Vehicle::updateTrajectory(const CarLocalizationData& newState,
 	}
 
 	// Predict position of vehicles after delay-time:
-	const double delayTime = nPrevPredictionPathSize * delta_t;
+	const double delayTime = nPrevPredictionPathSize * Utils::delta_t;
 	sensorFusion_.update(sf_data_, currStateV6_(0), map_);
 	sensorFusion_.predict(delayTime);
 
@@ -84,7 +83,7 @@ void Vehicle::updateTrajectory(const CarLocalizationData& newState,
 		}
 
 		const auto pt = map_.getXYInterpolated(curr_state(0), curr_state(3));
-		curr_time += delta_t;
+		curr_time += Utils::delta_t;
 		curr_state = pTraj->EvaluateStateAt(curr_time);
 
 		next_x_vals_.push_back(pt.x);

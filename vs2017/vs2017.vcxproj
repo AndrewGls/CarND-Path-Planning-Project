@@ -20,9 +20,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\Behavior.cpp" />
+    <ClCompile Include="..\src\Waypoints.cpp" />
     <ClCompile Include="..\src\LaneChanging.cpp" />
-    <ClCompile Include="..\src\HighwayMap.cpp" />
-    <ClCompile Include="..\src\KalmanFilter.cpp" />
     <ClCompile Include="..\src\LineKeeping.cpp" />
     <ClCompile Include="..\src\main.cpp" />
     <ClCompile Include="..\src\SensorFusion.cpp" />
@@ -39,14 +38,12 @@
     <ClCompile Include="..\src\uWS\WebSocket.cpp" />
     <ClCompile Include="..\src\uWS\WebSocketImpl.cpp" />
     <ClCompile Include="..\src\Vehicle.cpp" />
-    <ClCompile Include="..\src\VehicleState.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\Behavior.h" />
     <ClInclude Include="..\src\LaneChanging.h" />
-    <ClInclude Include="..\src\HighwayMap.h" />
+    <ClInclude Include="..\src\Waypoints.h" />
     <ClInclude Include="..\src\json.hpp" />
-    <ClInclude Include="..\src\KalmanFilter.h" />
     <ClInclude Include="..\src\LineKeeping.h" />
     <ClInclude Include="..\src\OtherVehicle.h" />
     <ClInclude Include="..\src\SensorFusion.h" />
@@ -68,7 +65,6 @@
     <ClInclude Include="..\src\uWS\WebSocket.h" />
     <ClInclude Include="..\src\uWS\WebSocketProtocol.h" />
     <ClInclude Include="..\src\Vehicle.h" />
-    <ClInclude Include="..\src\Waypoint.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

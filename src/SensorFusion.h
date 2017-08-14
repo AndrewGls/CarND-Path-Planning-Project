@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Types.h"
-#include "HighwayMap.h"
+#include "Waypoints.h"
 #include "OtherVehicle.h"
 #include <unordered_map>
 
@@ -13,7 +13,7 @@ public:
 	SensorFusion() {}
 
 	void predict(double deltaTime);
-	void update (const std::vector<SensorFusionData>& sensorFusion, double currS, const HighwayMap& map);
+	void update (const std::vector<SensorFusionData>& sensorFusion, double currS, const Waypoints& map);
 
 	// Returns all vehicles in the lane which are close to SDC car's S-position: [sdcStateV6(0)-deltaS, sdcStateV6(0)+deltaS].
 	TOtherCarsTrajectory GetOtherCarsTrajectoryInLane(const Eigen::VectorXd& sdcStateV6, int nLane, double timeDuration, double timeStep) const;
@@ -24,6 +24,6 @@ public:
 	TOtherVehicles GetNearestCarsInLane(const Eigen::VectorXd& sdcStateV6, int nLane, double deltaS = 200) const;
 
 private:
-	std::unordered_map<int, bool> m_mapUpdate;
+	std::unordered_map<int, bool> m_mapTrackedCars;
 	std::unordered_map<int, OtherVehicle> m_mapVehicles;
 };

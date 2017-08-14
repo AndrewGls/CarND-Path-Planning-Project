@@ -254,8 +254,8 @@ double Trajectory::CalcJerkCost(double timeDuration, double& maxJs, double& maxJ
 {
 	// See: https://d17h27t6h515a5.cloudfront.net/topher/2017/July/595fd482_werling-optimal-trajectory-generation-for-dynamic-street-scenarios-in-a-frenet-frame/werling-optimal-trajectory-generation-for-dynamic-street-scenarios-in-a-frenet-frame.pdf
 
-	maxJs = MinDoubleVal;
-	maxJd = MinDoubleVal;
+	maxJs = Utils::MinDoubleVal;
+	maxJd = Utils::MinDoubleVal;
 
 	double Cs = 0;
 	double Cd = 0;
@@ -317,8 +317,8 @@ double Trajectory::CalcAccelCost(double timeDuration) const
 std::pair<double, double> Trajectory::MinMaxVelocity_S() const
 {
 	std::pair<double, double> minMax(
-		MaxDoubleVal,// std::numeric_limits<double>::max(),
-		MinDoubleVal//std::numeric_limits<double>::min()
+		Utils::MaxDoubleVal,// std::numeric_limits<double>::max(),
+		Utils::MinDoubleVal//std::numeric_limits<double>::min()
 	);
 
 	for (double t = 0; t < durationS_; t += dt_)

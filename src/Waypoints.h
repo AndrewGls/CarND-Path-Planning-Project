@@ -1,14 +1,14 @@
 #pragma once
 
-#include "Waypoint.h"
+#include "Types.h"
 #include "spline.h"
 #include <vector>
 #include "Eigen-3.3/Eigen/Core"
 
-class HighwayMap
+class Waypoints
 {
 public:
-	HighwayMap();
+	Waypoints();
 
 	// Transform from Frenet s,d coordinates to Cartesian x,y using bspline for interpolation.
 	Point getXYInterpolated(double s, double d) const;
@@ -37,7 +37,7 @@ private:
 };
 
 
-inline double HighwayMap::norm_s(double s) const
+inline double Waypoints::norm_s(double s) const
 {
 	return (s > max_s_) ? (s -= max_s_) : (s < -max_s_ ? (s += max_s_) : s);
 }

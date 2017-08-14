@@ -108,7 +108,7 @@ private:
 	double timeStart_;
 	double durationS_;		// duration T of S state in secs
 	double durationD_;		// duration T of D state in secs
-	double dt_ = delta_t;	// time step along a trajectory
+	double dt_ = Utils::delta_t;	// time step along a trajectory
 	double cost_dt_ = 0.1;  // time step along a trajectory used during evaluation of trajectory-cost.
 
 	Eigen::VectorXd cost_{ Eigen::VectorXd::Zero(5) };

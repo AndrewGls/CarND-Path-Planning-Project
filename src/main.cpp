@@ -10,7 +10,7 @@
 #include "Eigen-3.3/Eigen/QR"
 #include "json.hpp"
 #include "spline.h"
-#include "HighwayMap.h"
+#include "Waypoints.h"
 #include "Utils.hpp"
 #include "Vehicle.h"
 
@@ -44,7 +44,7 @@ int main() {
   uWS::Hub h;
 
   // Load up map values for waypoint's x,y,s and d normalized normal vectors
-  HighwayMap map;
+  Waypoints map;
   Vehicle vehicle(map);
 
   h.onMessage([&vehicle](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,

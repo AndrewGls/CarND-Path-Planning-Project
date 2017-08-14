@@ -1,4 +1,4 @@
-# include "HighwayMap.h"
+#include "Waypoints.h"
 #include <string>
 #include <fstream>
 #include <sstream>
@@ -9,7 +9,7 @@ using namespace std;
 
 using Eigen::Vector2d;
 
-HighwayMap::HighwayMap()
+Waypoints::Waypoints()
 {
 	// Waypoint map to read from
 	const string map_file = "../data/highway_map.csv";
@@ -32,7 +32,7 @@ HighwayMap::HighwayMap()
 }
 
 
-Point HighwayMap::getXYInterpolated(double s, double d) const
+Point Waypoints::getXYInterpolated(double s, double d) const
 {
 	s = norm_s(s);
 
@@ -43,7 +43,7 @@ Point HighwayMap::getXYInterpolated(double s, double d) const
 }
 
 
-Vector2d HighwayMap::CalcFrenet(const Point& ptXY, double s_start) const
+Vector2d Waypoints::CalcFrenet(const Point& ptXY, double s_start) const
 {
 	// Gradient descent is used to find the point (s,d) on the spline, which is closest to point ptXY.
 	const double eps = 1.0e-6;
@@ -72,18 +72,18 @@ Vector2d HighwayMap::CalcFrenet(const Point& ptXY, double s_start) const
 	return Vector2d(s, d);
 }
 
-double HighwayMap::error_deriv(const Point& pt, double s) const
+double Waypoints::error_deriv(const Point& pt, double s) const
 {
 	return -2. * (pt.x - x_spline_(s)) * x_spline_.deriv(1, s)
 		- 2. * (pt.y - y_spline_(s)) * y_spline_.deriv(1, s);
 }
 
-Vector2d HighwayMap::get_normal_at(double s) const
+Vector2d Waypoints::get_normal_at(double s) const
 {
 	return Vector2d(-y_spline_.deriv(1, s), x_spline_.deriv(1, s));
 }
 
-void HighwayMap::fit_spline()
+void Waypoints::fit_spline()
 {
 	// Spline fitting
 //	sort(waypoints_.begin(), waypoints_.end(), [](const Waypoint& l, const Waypoint& r) {return l.s < r.s; });

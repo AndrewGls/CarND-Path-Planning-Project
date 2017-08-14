@@ -15,11 +15,11 @@ void SensorFusion::predict(double deltaTime)
 }
 
 
-void SensorFusion::update(const vector<SensorFusionData>& sensorFusion, double currS, const HighwayMap& map)
+void SensorFusion::update(const vector<SensorFusionData>& sensorFusion, double currS, const Waypoints& map)
 {
-	m_mapUpdate.clear();
+	m_mapTrackedCars.clear();
 	for (const auto& elem : m_mapVehicles)
-		m_mapUpdate[elem.first] = false;
+		m_mapTrackedCars[elem.first] = false;
 
 	const auto count = sensorFusion.size();
 
@@ -52,10 +52,10 @@ void SensorFusion::update(const vector<SensorFusionData>& sensorFusion, double c
 		else
 			it->second.update(s, sd(1), v);
 
-		m_mapUpdate[sf.id] = true;
+		m_mapTrackedCars[sf.id] = true;
 	}
 
-	for (const auto& elem : m_mapUpdate)
+	for (const auto& elem : m_mapTrackedCars)
 	{
 		if (!elem.second)
 			m_mapVehicles.erase(elem.first);

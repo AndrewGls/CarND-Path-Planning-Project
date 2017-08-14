@@ -6,14 +6,14 @@
 #include <vector>
 #include <memory>
 
-class HighwayMap;
+class Waypoints;
 class Vehicle;
 
 
 class Vehicle
 {
 public:
-	Vehicle(const HighwayMap& map);
+	Vehicle(const Waypoints& map);
 
 	std::vector<SensorFusionData>& getSensorFusionStorage() { return sf_data_; }
 	void updateTrajectory(const CarLocalizationData& newState, const std::vector<double>& previous_path_x, const std::vector<double>& previous_path_y);
@@ -22,7 +22,7 @@ public:
 	double target_speed() const { return target_speed_; }
 	double max_acceleration() const { return max_a_; }
 
-	const HighwayMap& get_map() const { return map_; }
+	const Waypoints& get_map() const { return map_; }
 	const std::vector<SensorFusionData>& sensor_fucsion() const { return sf_data_; }
 
 	double braking_distance(double speed) const;
@@ -34,7 +34,7 @@ public:
 private:
 
 private:
-	const HighwayMap& map_;
+	const Waypoints& map_;
 	std::vector<SensorFusionData> sf_data_;
 	FiniteState state_;
 	bool initDone_;

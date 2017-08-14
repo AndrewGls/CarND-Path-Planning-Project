@@ -51,9 +51,6 @@
     <ClCompile Include="..\src\uWS\WebSocketImpl.cpp">
       <Filter>uWS</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\HighwayMap.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\Vehicle.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -72,13 +69,10 @@
     <ClCompile Include="..\src\LineKeeping.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\KalmanFilter.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\VehicleState.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\LaneChanging.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Waypoints.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -122,12 +116,6 @@
     <ClInclude Include="..\src\spline.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\HighwayMap.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\Waypoint.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\Utils.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -158,10 +146,10 @@
     <ClInclude Include="..\src\OtherVehicle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\KalmanFilter.h">
+    <ClInclude Include="..\src\LaneChanging.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\LaneChanging.h">
+    <ClInclude Include="..\src\Waypoints.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
