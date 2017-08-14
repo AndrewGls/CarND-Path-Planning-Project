@@ -29,42 +29,8 @@ public:
 	// https://d17h27t6h515a5.cloudfront.net/topher/2017/July/595fd482_werling-optimal-trajectory-generation-for-dynamic-street-scenarios-in-a-frenet-frame/werling-optimal-trajectory-generation-for-dynamic-street-scenarios-in-a-frenet-frame.pdf
 	static TrajectoryPtr VelocityKeeping_STrajectory (const Eigen::VectorXd& currStateX6, double endD, double targetVelocity, double currTime, double timeDurationS, double timeDurationD);
 
-	// Used for prediction position other vehicles: constant velocity model without changing lane is used for small time delays.
-//	static TrajectoryPtr ConstartVelocity_STrajectory(double currS, double currD, double currVelosity, double currTime, double timeDuration);
-
 	// Returns vector state [s, s_d, s_dd, d, d_d, d_dd] at the time 'time'.
 	Eigen::VectorXd EvaluateStateAt(double time) const;
-
-	// Calculates minimum distance to specified trajectory.
-	// Returns pair like { min-distance, time }.
-//	std::pair<double, double> CalcMinDistanceToTrajectory(const TrajectoryPtr otheTraj, double timeStep = delta_t) const;
-	
-	double CalcSaferyDistanceCost(const Eigen::MatrixXd& s2, double timeDuration) const;
-	double CalcLaneOffsetCost(double timeDuration) const { return 0; }
-
-	// Returns trajectory duration in seconds.
-	double getDurationS() const { return durationS_; }
-	double getDurationD() const { return durationD_; }
-	Eigen::VectorXd getStartState() const { return startState_; }
-
-	double getTargetS() const { return endState_(0); }
-	double getTargetD() const { return endState_(3); }
-	double getStartD() const { return startState_(3); }
-
-	double getTotalCost() const { return cost_.sum(); }
-
-	void setTimeCost (double cost)			{ cost_(0) = cost; }
-	void setJerkCost (double cost)			{ cost_(1) = cost; }
-	void setAccelCost(double cost)			{ cost_(2) = cost; }
-	void setVelocityCost (double cost)		{ cost_(3) = cost; }
-	void setSafetyDistanceCost (double cost)	{ cost_(4) = cost; }
-
-	double getTimeCost() const			{ return cost_(0); }
-	double getJerkCost() const			{ return cost_(1); }
-	double getAccelCost() const			{ return cost_(2); }
-	double getVelocityCost() const		{ return cost_(3); }
-	double getSafetyDistanceCost() const { return cost_(4); }
-
 
 	// Calculation of cost functions.
 	// See: https://d17h27t6h515a5.cloudfront.net/topher/2017/July/595fd482_werling-optimal-trajectory-generation-for-dynamic-street-scenarios-in-a-frenet-frame/werling-optimal-trajectory-generation-for-dynamic-street-scenarios-in-a-frenet-frame.pdf
@@ -73,11 +39,37 @@ public:
 	double CalcJerkCost(double timeDuration, double& maxJs, double& maxJd) const;
 	double CalcAccelCost(double timeDuration) const;
 	double CalcVelocityCost(double targetVelocity, double timeDuration) const;
+	double CalcSaferyDistanceCost(const Eigen::MatrixXd& s2, double timeDuration) const;
+	double CalcLaneOffsetCost(double timeDuration) const { return 0; }
 	std::pair<double, double> MinMaxVelocity_S() const;
 
+	// Returns trajectory duration in seconds.
+	double GetDurationS() const { return m_durationS; }
+	double GetDurationD() const { return m_durationD; }
+	Eigen::VectorXd GetStartState() const { return m_startState; }
+
+	double GetTargetS() const { return m_endState(0); }
+	double GetTargetD() const { return m_endState(3); }
+	double GetStartD() const { return m_startState(3); }
+
+	double GetTotalCost() const { return m_cost.sum(); }
+
+	void SetJerkCost (double cost)			{ m_cost(0) = cost; }
+	void SetAccelCost(double cost)			{ m_cost(1) = cost; }
+	void SetVelocityCost (double cost)		{ m_cost(2) = cost; }
+	void SetSafetyDistanceCost (double cost)	{ m_cost(3) = cost; }
+
+	double GetJerkCost() const			{ return m_cost(0); }
+	double GetAccelCost() const			{ return m_cost(1); }
+	double GetVelocityCost() const		{ return m_cost(2); }
+	double GetSafetyDistanceCost() const { return m_cost(3); }
+
+	double TragetVelocity() const { return m_tragetVelocity; }
 	void PrintInfo();
 
 private:
+	double CalcSafetyDistanceCost(double Sdist, double Ddist, double velocity) const;
+
 	// Calculates Jerk Minimizing Trajectory for start state, end state and duration T.
 	// Input:
 	//   startStateX3 is vector of size 3: [s, s_d, s_dd]
@@ -85,9 +77,6 @@ private:
 	// Returns:
 	//   vector of size 6: [s, s_d, s_dd, a3, a4, a5]
 	static Eigen::VectorXd CalcQuinticPolynomialCoeffs(const Eigen::VectorXd& startStateX3, const Eigen::VectorXd& endStateX3, double T);
-
-	// Calculates polynomial value at time 't' and returns 6-dim vector: [s, s_d, s_dd, d, d_d, d_dd].
-//	static Eigen::VectorXd evalaluateStateAt(const Eigen::VectorXd& s_coeffsV6, const Eigen::VectorXd& d_coeffsV6, double t);
 
 	// Calculates polynomial value at time 't' and returns 3-dim vector: [s, s_d, s_dd]
 	static Eigen::VectorXd calc_polynomial_at (const Eigen::VectorXd& coeffsX6, double t);
@@ -97,33 +86,25 @@ private:
 	inline double calc_polynomial_velocity_at (const Eigen::VectorXd& coeffsX6, double t) const;
 	inline double calc_polynomial_distance_at(const Eigen::VectorXd& coeffsX6, double t) const;
 
-	double calcSafetyDistanceCost(double Sdist, double Ddist, double velocity) const;
-
 	// Calculate Jerk optimal polynomial for S-trajectory with keeping velocity, using current S start-state [s, s_d, s_dd], 
 	// target velocity m/s and specified duration T in sec.
 	// Returns: polynomial copeffs as 6-dim vector.
 	static Eigen::VectorXd calc_s_polynomial_velocity_keeping(const Eigen::VectorXd& startStateV3, double targetVelocity, double T);
 
 private:
-	double timeStart_;
-	double durationS_;		// duration T of S state in secs
-	double durationD_;		// duration T of D state in secs
-	double dt_ = Utils::delta_t;	// time step along a trajectory
-	double cost_dt_ = 0.1;  // time step along a trajectory used during evaluation of trajectory-cost.
+	double m_timeStart;
+	double m_durationS;		// duration T of S state in secs
+	double m_durationD;		// duration T of D state in secs
+	double m_dt = Utils::delta_t;	// time step along a trajectory
+	double m_costDT = 0.1;  // time step along a trajectory used during evaluation of trajectory-cost.
+	double m_tragetVelocity;
 
-	Eigen::VectorXd cost_{ Eigen::VectorXd::Zero(5) };
+	Eigen::VectorXd m_cost{ Eigen::VectorXd::Zero(4) };
 
-	Eigen::VectorXd startState_; // [s, s_dot, s_ddot, d, d_dot, d_ddot]
-	Eigen::VectorXd endState_;   // [s, s_dot, s_ddot, d, d_dot, d_ddot]
-	Eigen::VectorXd S_coeffs_;   // 6 coeffs of quintic polynomial
-	Eigen::VectorXd D_coeffs_;   // 6 coeffs of quintic polynomial
-
-public:
-	// DEBUGING part
-	double DE_V = 0;
-
-	mutable double DE_D_MIN = 0;
-	mutable double DE_D_MAX = 0;
+	Eigen::VectorXd m_startState; // [s, s_dot, s_ddot, d, d_dot, d_ddot]
+	Eigen::VectorXd m_endState;   // [s, s_dot, s_ddot, d, d_dot, d_ddot]
+	Eigen::VectorXd m_Scoeffs;   // 6 coeffs of quintic polynomial
+	Eigen::VectorXd m_Dcoeffs;   // 6 coeffs of quintic polynomial
 };
 
 
@@ -182,11 +163,3 @@ inline double Trajectory::calc_polynomial_distance_at(const Eigen::VectorXd& a, 
 	// calculate s_d(t)
 	return a(0) + a(1) * t + a(2) * t2 + a(3) * t3 + a(4) * t4 + a(5) * t5;
 }
-
-/*
-inline double logistic(double x)
-{
-	return 2. / (1 + exp(-x)) - 1.;
-}*/
-
-

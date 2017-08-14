@@ -8,14 +8,14 @@
 
 using namespace std;
 
-void SensorFusion::predict(double deltaTime)
+void SensorFusion::Predict(double deltaTime)
 {
 	for (auto& elem : m_mapVehicles)
-		elem.second.predict(deltaTime);
+		elem.second.Predict(deltaTime);
 }
 
 
-void SensorFusion::update(const vector<SensorFusionData>& sensorFusion, double currS, const Waypoints& map)
+void SensorFusion::Update(const vector<SensorFusionData>& sensorFusion, double currS, const Waypoints& map)
 {
 	m_mapTrackedCars.clear();
 	for (const auto& elem : m_mapVehicles)
@@ -50,7 +50,7 @@ void SensorFusion::update(const vector<SensorFusionData>& sensorFusion, double c
 		if (it == m_mapVehicles.end())
 			m_mapVehicles [sf.id] = OtherVehicle(s, sd(1), v);
 		else
-			it->second.update(s, sd(1), v);
+			it->second.Update(s, sd(1), v);
 
 		m_mapTrackedCars[sf.id] = true;
 	}
@@ -87,20 +87,20 @@ TOtherVehicles SensorFusion::GetLeadingCarsInLane (const Eigen::VectorXd& sdcSta
 	for (const auto& elem : m_mapVehicles)
 	{
 		const auto& car = elem.second;
-		if (car.get_s() > s && car.isInlane(lane))
+		if (car.Get_S() > s && car.IsInlane(lane))
 		{
 			leading_cars.push_back(car);
 		}
 #ifdef VERBOSE_OTHER_IGNORED_CARS
 		else
 		{
-			cout << "Ignored car: ("<< car.get_s() << "," << car.get_d() << ")" << endl;
+			cout << "Ignored car: ("<< car.Get_S() << "," << car.Get_D() << ")" << endl;
 		}
 #endif // VERBOSE_OTHER_IGNORED_CARS
 	}
 
 	// sorts by ascending S
-	sort(leading_cars.begin(), leading_cars.end(), [](const OtherVehicle& l, const OtherVehicle& r) { return l.get_s() < r.get_s(); });
+	sort(leading_cars.begin(), leading_cars.end(), [](const OtherVehicle& l, const OtherVehicle& r) { return l.Get_S() < r.Get_S(); });
 	if (bOnlyNearest)
 		leading_cars.resize(1);
 
@@ -108,8 +108,8 @@ TOtherVehicles SensorFusion::GetLeadingCarsInLane (const Eigen::VectorXd& sdcSta
 	for (const auto car : leading_cars)
 	{
 		cout << "---------------------" << endl;
-		cout << "Detected car in front at: (" << car.get_s() << "," << car.get_d() << ")"
-			<< " DIST: " << leading_cars[0].get_s() - sdcStateV6(0)
+		cout << "Detected car in front at: (" << car.Get_S() << "," << car.Get_D() << ")"
+			<< " DIST: " << leading_cars[0].Get_S() - sdcStateV6(0)
 			<< endl;
 		cout << "---------------------" << endl;
 	}
@@ -127,7 +127,7 @@ TOtherVehicles SensorFusion::GetNearestCarsInLane(const Eigen::VectorXd& sdcStat
 	for (const auto& elem : m_mapVehicles)
 	{
 		const auto& car = elem.second;
-		if (car.isInlane(nLane) && Utils::distance(car.get_s(), s) < deltaS)
+		if (car.IsInlane(nLane) && Utils::distance(car.Get_S(), s) < deltaS)
 		{
 			leading_cars.push_back(car);
 		}
@@ -137,7 +137,7 @@ TOtherVehicles SensorFusion::GetNearestCarsInLane(const Eigen::VectorXd& sdcStat
 	cout << "---------------------" << endl;
 	for (const auto car : leading_cars)
 	{
-		cout << "Detected car in front at: (" << car.get_s() << "," << car.get_d() << ")" << "),      S:" << s << std::endl;
+		cout << "Detected car in front at: (" << car.Get_S() << "," << car.Get_D() << ")" << "),      S:" << s << std::endl;
 	}
 #endif // VERBOSE_OTHER_LEADING_CARS
 

@@ -15,7 +15,7 @@ PathPlanner::PathPlanner()
 	m_states.push_back(std::make_unique<LineKeeping>());
 }
 
-TrajectoryPtr PathPlanner::optimalTrajectory (const VectorXd& currStateX6, double currTime, const SensorFusion& sensorFusion)
+TrajectoryPtr PathPlanner::OptimalTrajectory (const VectorXd& currStateX6, double currTime, const SensorFusion& sensorFusion)
 {
 	assert(m_states.size() < 3);
 
@@ -23,7 +23,7 @@ TrajectoryPtr PathPlanner::optimalTrajectory (const VectorXd& currStateX6, doubl
 	TrajectoryPtr pOptimalTrajectory;
 	VehicleState* pCurrState = m_states.back().get();
 
-	tie(pNewState, pOptimalTrajectory) = pCurrState->optimalTrajectory(currStateX6, currTime, sensorFusion);
+	tie(pNewState, pOptimalTrajectory) = pCurrState->OptimalTrajectory(currStateX6, currTime, sensorFusion);
 
 	if (!pNewState)
 	{

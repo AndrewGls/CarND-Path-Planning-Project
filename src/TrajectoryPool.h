@@ -15,17 +15,14 @@ public:
 
 	TrajectoryPool(double speedLimit, double timeHorizon);
 
-	void setOtherCars(const TOtherCarsTrajectory& otherTrajectories);
-	void addOtherCars(const TOtherCarsTrajectory& otherTrajectories);
-	void addTrajectory(TrajectoryPtr traj);
+	void SetOtherCars(const TOtherCarsTrajectory& otherTrajectories);
+	void AddOtherCars(const TOtherCarsTrajectory& otherTrajectories);
+	void AddTrajectory(TrajectoryPtr traj);
 
-	TrajectoryPtr optimalTrajectory() const;
-
-	const TPool getPool() const { return m_pool; }
-	TPool getPool() { return m_pool; }
+	TrajectoryPtr OptimalTrajectory() const;
 
 private:
-	void calcTrajectoryCost(TrajectoryPtr traj);
+	void CalcTrajectoryCost(TrajectoryPtr traj);
 
 private:
 	TPool m_pool;
@@ -39,6 +36,5 @@ private:
 	static constexpr double JerkCostWeight = 0.2;// 0.5;// 0.01;
 	static constexpr double AccelCostWeight = 1;
 	static constexpr double VelocityCostWeight = 0.5;
-	static constexpr double TimeCostWeight = 0;// 100;
 	static constexpr double SaferyDistCostWeight = 1000;
 };

@@ -51,10 +51,10 @@ void Vehicle::UpdateTrajectory(const CarLocalizationData& newState,
 
 	// Predict position of vehicles after delay-time:
 	const double delayTime = nPrevPredictionPathSize * Utils::delta_t;
-	m_sensorFusion.update(m_sensorFusionData, m_currStateV6(0), m_waypoints);
-	m_sensorFusion.predict(delayTime);
+	m_sensorFusion.Update(m_sensorFusionData, m_currStateV6(0), m_waypoints);
+	m_sensorFusion.Predict(delayTime);
 
-	TrajectoryPtr pTraj = m_behavior.optimalTrajectory(m_currStateV6, m_currTime, m_sensorFusion);
+	TrajectoryPtr pTraj = m_behavior.OptimalTrajectory(m_currStateV6, m_currTime, m_sensorFusion);
 
 #ifdef VERBOSE_NEXT_XY
 	cout << "------- Driving path ----------" << endl;
@@ -71,7 +71,7 @@ void Vehicle::UpdateTrajectory(const CarLocalizationData& newState,
 			m_currStateV6 = currState;
 		}
 
-		const auto pt = m_waypoints.getXYInterpolated(currState(0), currState(3));
+		const auto pt = m_waypoints.GetXYInterpolated(currState(0), currState(3));
 		currTime += Utils::delta_t;
 		currState = pTraj->EvaluateStateAt(currTime);
 

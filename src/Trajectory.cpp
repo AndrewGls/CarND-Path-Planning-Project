@@ -13,31 +13,35 @@ using Eigen::MatrixXd;
 using Eigen::Vector3d;
 
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
 Trajectory::Trajectory()
-	: timeStart_(0)
-	, durationS_(0)
-	, durationD_(0)
-	, startState_(VectorXd::Zero(6))
-	, endState_(VectorXd::Zero(6))
-	, S_coeffs_(VectorXd::Zero(6))
-	, D_coeffs_(VectorXd::Zero(6))
+	: m_timeStart(0)
+	, m_durationS(0)
+	, m_durationD(0)
+	, m_tragetVelocity(0)
+	, m_startState(VectorXd::Zero(6))
+	, m_endState(VectorXd::Zero(6))
+	, m_Scoeffs(VectorXd::Zero(6))
+	, m_Dcoeffs(VectorXd::Zero(6))
 {
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
 Trajectory::Trajectory(const VectorXd& startStateX6, const VectorXd& endStateX6, double durationS, double durationD, double timeStart)
-	: timeStart_(timeStart)
-	, durationS_(durationS)
-	, durationD_(durationD)
-	, startState_(startStateX6)
-	, endState_(endStateX6)
-	, S_coeffs_(VectorXd::Zero(6))
-	, D_coeffs_(VectorXd::Zero(6))
+	: m_timeStart(timeStart)
+	, m_durationS(durationS)
+	, m_durationD(durationD)
+	, m_tragetVelocity(0)
+	, m_startState(startStateX6)
+	, m_endState(endStateX6)
+	, m_Scoeffs(VectorXd::Zero(6))
+	, m_Dcoeffs(VectorXd::Zero(6))
 {
-	S_coeffs_ = CalcQuinticPolynomialCoeffs(startStateX6.head(3), endStateX6.head(3), durationS_);
-	D_coeffs_ = CalcQuinticPolynomialCoeffs(startStateX6.segment(3,3), endStateX6.segment(3,3), durationD_);
+	m_Scoeffs = CalcQuinticPolynomialCoeffs(startStateX6.head(3), endStateX6.head(3), m_durationS);
+	m_Dcoeffs = CalcQuinticPolynomialCoeffs(startStateX6.segment(3,3), endStateX6.segment(3,3), m_durationD);
 }
 
-
+///////////////////////////////////////////////////////////////////////////////////////////////////
 TrajectoryPtr Trajectory::VelocityKeeping_STrajectory( const VectorXd& currStateX6,
 													   double endD,
 													   double targetVelocity,
@@ -46,86 +50,45 @@ TrajectoryPtr Trajectory::VelocityKeeping_STrajectory( const VectorXd& currState
 													   double timeDurationD)
 {
 	TrajectoryPtr pTraj = std::make_shared<Trajectory>();
-	pTraj->timeStart_ = currTime;
-	pTraj->durationS_ = timeDurationS;
-	pTraj->durationD_ = timeDurationD;
-	pTraj->startState_  = currStateX6;
-	pTraj->endState_(3) = endD;
+	pTraj->m_timeStart = currTime;
+	pTraj->m_durationS = timeDurationS;
+	pTraj->m_durationD = timeDurationD;
+	pTraj->m_startState  = currStateX6;
+	pTraj->m_endState(3) = endD;
+	pTraj->m_tragetVelocity = targetVelocity;
 
 	const double currD = currStateX6(3);
 
-	pTraj->S_coeffs_ = calc_s_polynomial_velocity_keeping(currStateX6.head(3), targetVelocity, timeDurationS);
+	pTraj->m_Scoeffs = calc_s_polynomial_velocity_keeping(currStateX6.head(3), targetVelocity, timeDurationS);
 
 	if (currD == endD)
 	{
-		pTraj->D_coeffs_(0) = currStateX6(3); // saves D position on the road.
+		pTraj->m_Dcoeffs(0) = currStateX6(3); // saves D position on the road.
 	}
 	else
 	{
-		pTraj->D_coeffs_ = CalcQuinticPolynomialCoeffs(pTraj->startState_.segment(3, 3), pTraj->endState_.segment(3, 3), timeDurationD);
+		pTraj->m_Dcoeffs = CalcQuinticPolynomialCoeffs(pTraj->m_startState.segment(3, 3), pTraj->m_endState.segment(3, 3), timeDurationD);
 	}
-
-	pTraj->DE_V = targetVelocity;
 
 	return pTraj;
 }
 
-
-// Used for prediction position other vehicles: constant velocity model without changing lane is used for small time delays.
-/*TrajectoryPtr Trajectory::ConstartVelocity_STrajectory(double currS, double currD, double currVelosity, double currTime, double timeDuration)
-{
-	// Constant velosity trajectory with saving without shanging lane:
-	//  Start state: [s, s_d, 0, d, 0, 0] 
-	//  End state:   [s+s_d*T, s_d, 0, d, 0, 0]
-
-	TrajectoryPtr pTraj = std::make_shared<Trajectory>();
-
-	pTraj->startState_ << currS, currVelosity, 0, currD, 0, 0;
-	pTraj->endState_ << currS + currVelosity * timeDuration, currVelosity, 0, currD, 0, 0;
-
-	pTraj->S_coeffs_ << currS, currVelosity, 0, 0, 0, 0;
-	pTraj->D_coeffs_ << currD, 0, 0, 0, 0, 0;
-
-	pTraj->timeStart_ = currTime;
-	pTraj->durationS_ = timeDuration;
-
-	return pTraj;
-}*/
-
-/*
+///////////////////////////////////////////////////////////////////////////////////////////////////
 VectorXd Trajectory::EvaluateStateAt(double time) const
 {
-	double t = time - timeStart_;
-	VectorXd state = evalaluateStateAt(S_coeffs_, D_coeffs_, std::min(t, durationS_));
+	double t = time - m_timeStart;
+	VectorXd stateS = calc_polynomial_at (m_Scoeffs, std::min(t, m_durationS));
+	VectorXd stateD = calc_polynomial_at (m_Dcoeffs, std::min(t, m_durationD));
 
 	// model with acceleration = 0
-	if (t > durationS_)
+	if (t > m_durationS)
 	{
-		const double dt = t - durationS_;
-		state(0) += state(1) * dt;
-		state(3) += state(4) * dt;
+		stateS(0) += stateS(1) * (t - m_durationS);
 	}
 
-	return state;
-}*/
-
-
-VectorXd Trajectory::EvaluateStateAt(double time) const
-{
-	double t = time - timeStart_;
-//	VectorXd state = evalaluateStateAt(S_coeffs_, D_coeffs_, std::min(t, durationS_));
-	VectorXd stateS = calc_polynomial_at (S_coeffs_, std::min(t, durationS_));
-	VectorXd stateD = calc_polynomial_at (D_coeffs_, std::min(t, durationD_));
-
-	// model with acceleration = 0
-	if (t > durationS_)
+	if (t > m_durationD)
 	{
-		stateS(0) += stateS(1) * (t - durationS_);
-	}
-
-	if (t > durationD_)
-	{
-		stateD(0) += stateD(1) * (t - durationD_);
+		stateD(0) += stateD(1) * (t - m_durationD);
 	}
 
 	VectorXd state(6);
@@ -133,15 +96,7 @@ VectorXd Trajectory::EvaluateStateAt(double time) const
 	return state;
 }
 
-/*
-VectorXd Trajectory::evalaluateStateAt(const Eigen::VectorXd& s_coeffsV6, const Eigen::VectorXd& d_coeffsV6, double time)
-{
-	VectorXd state = VectorXd::Zero(6);
-	state << calc_polynomial_at(s_coeffsV6, time), calc_polynomial_at(d_coeffsV6, time);
-	return state;
-}*/
-
-
+///////////////////////////////////////////////////////////////////////////////////////////////////
 VectorXd Trajectory::CalcQuinticPolynomialCoeffs(const VectorXd& startStateX3, const VectorXd& endStateX3, double T)
 {
 	const auto s_i = startStateX3[0];
@@ -175,7 +130,7 @@ VectorXd Trajectory::CalcQuinticPolynomialCoeffs(const VectorXd& startStateX3, c
 	return coeffs;
 }
 
-
+///////////////////////////////////////////////////////////////////////////////////////////////////
 VectorXd Trajectory::calc_polynomial_at(const VectorXd& coeffsX6, double t)
 {
 	const VectorXd& a = coeffsX6;
@@ -207,7 +162,7 @@ VectorXd Trajectory::calc_polynomial_at(const VectorXd& coeffsX6, double t)
 	return state;
 }
 
-
+///////////////////////////////////////////////////////////////////////////////////////////////////
 Eigen::VectorXd Trajectory::calc_s_polynomial_velocity_keeping(const Eigen::VectorXd& startStateV3, double targetVelocity, double T)
 {
 	// Calculate 6 coeffs [a1, a2, a3, a4, a5] with constraints: a4=0 and a5 = 0.
@@ -248,7 +203,7 @@ Eigen::VectorXd Trajectory::calc_s_polynomial_velocity_keeping(const Eigen::Vect
 	return S_Coeffs;
 }
 
-
+///////////////////////////////////////////////////////////////////////////////////////////////////
 // Calculate Jerk cost function for evaluated trajectory points as array of vectors like [s, s_d, s_dd, d, d_d, d_dd].
 double Trajectory::CalcJerkCost(double timeDuration, double& maxJs, double& maxJd) const
 {
@@ -266,12 +221,12 @@ double Trajectory::CalcJerkCost(double timeDuration, double& maxJs, double& maxJ
 	const double Ws = 1.;
 	const double Wd = 1.;// 2.;
 
-	const int points = static_cast<int>(timeDuration / cost_dt_);
+	const int points = static_cast<int>(timeDuration / m_costDT);
 
-	for (double t = 0; t < timeDuration; t += cost_dt_)
+	for (double t = 0; t < timeDuration; t += m_costDT)
 	{
-		const double Js = calc_polynomial_jerk_at(S_coeffs_, std::min(t, durationS_));
-		const double Jd = calc_polynomial_jerk_at(D_coeffs_, std::min(t, durationD_));
+		const double Js = calc_polynomial_jerk_at(m_Scoeffs, std::min(t, m_durationS));
+		const double Jd = calc_polynomial_jerk_at(m_Dcoeffs, std::min(t, m_durationD));
 
 /*		std::cout
 			<< " t: " << t
@@ -289,16 +244,16 @@ double Trajectory::CalcJerkCost(double timeDuration, double& maxJs, double& maxJ
 	return (Ws * Cs + Wd * Cd) / points;
 }
 
-
+///////////////////////////////////////////////////////////////////////////////////////////////////
 double Trajectory::CalcAccelCost(double timeDuration) const
 {
 	double cost = 0;
-	const double points = timeDuration / cost_dt_;
+	const double points = timeDuration / m_costDT;
 
-	for (double t = 0; t < timeDuration; t += cost_dt_)
+	for (double t = 0; t < timeDuration; t += m_costDT)
 	{
-		const double as = calc_polynomial_accel_at(S_coeffs_, std::min(t, durationS_));
-		const double ad = calc_polynomial_accel_at(D_coeffs_, std::min(t, durationD_));
+		const double as = calc_polynomial_accel_at(m_Scoeffs, std::min(t, m_durationS));
+		const double ad = calc_polynomial_accel_at(m_Dcoeffs, std::min(t, m_durationD));
 		cost += as*as + ad*ad;
 
 /*		std::cout
@@ -313,7 +268,7 @@ double Trajectory::CalcAccelCost(double timeDuration) const
 	return cost / points;
 }
 
-
+///////////////////////////////////////////////////////////////////////////////////////////////////
 std::pair<double, double> Trajectory::MinMaxVelocity_S() const
 {
 	std::pair<double, double> minMax(
@@ -321,9 +276,9 @@ std::pair<double, double> Trajectory::MinMaxVelocity_S() const
 		Utils::MinDoubleVal//std::numeric_limits<double>::min()
 	);
 
-	for (double t = 0; t < durationS_; t += dt_)
+	for (double t = 0; t < m_durationS; t += m_dt)
 	{
-		const double v = calc_polynomial_velocity_at(S_coeffs_, t);
+		const double v = calc_polynomial_velocity_at(m_Scoeffs, t);
 		minMax.first = std::min(v, minMax.first);
 		minMax.second = std::max(v, minMax.second);
 	}
@@ -331,19 +286,19 @@ std::pair<double, double> Trajectory::MinMaxVelocity_S() const
 	return minMax;
 }
 
-
+///////////////////////////////////////////////////////////////////////////////////////////////////
 double Trajectory::CalcVelocityCost(double targetVelocity, double timeDuration) const
 {
 //	PrintState();
 
 	double Cost = 0;
 	double t = 0;
-	const int points = static_cast<int>(timeDuration / cost_dt_);
+	const int points = static_cast<int>(timeDuration / m_costDT);
 
 	for (int i = 0; i < points; i++)
 	{
-		const double vs = calc_polynomial_velocity_at(S_coeffs_, std::min(t, durationS_));
-		const double vd = calc_polynomial_velocity_at(D_coeffs_, std::min(t, durationD_));
+		const double vs = calc_polynomial_velocity_at(m_Scoeffs, std::min(t, m_durationS));
+		const double vd = calc_polynomial_velocity_at(m_Dcoeffs, std::min(t, m_durationD));
 		double v = std::sqrt(vs*vs + vd*vd);
 
 		if (v >= targetVelocity)
@@ -353,7 +308,7 @@ double Trajectory::CalcVelocityCost(double targetVelocity, double timeDuration) 
 		}
 
 		Cost += std::pow(targetVelocity - v, 2);
-		t += cost_dt_;
+		t += m_costDT;
 /*
 		std::cout
 			<< " t: " << t
@@ -367,38 +322,13 @@ double Trajectory::CalcVelocityCost(double targetVelocity, double timeDuration) 
 	return Cost / points;
 }
 
-
-// Calculates minimum distance to specified trajectory.
-// Returns pair like { min-distance, time }.
-/*std::pair<double, double> Trajectory::CalcMinDistanceToTrajectory(const TrajectoryPtr trajectory, double timeStep) const
-{
-	double minDist = MaxDoubleVal;
-	double minDistTime = 0;
-
-	const double timeEnd = timeStart_ + durationS_;
-
-	for (double t = timeStart_; t < timeEnd; t += timeStep)
-	{
-		VectorXd s1 = EvaluateStateAt(t);
-		VectorXd s2 = trajectory->EvaluateStateAt(t);
-		const double dist = Utils::distance(s1(0), s1(3), s2(0), s2(3));
-		if (dist < minDist)
-		{
-			minDist = dist;
-			minDistTime = t;
-		}
-	}
-
-	return std::pair<double, double>(minDist, minDistTime);
-}*/
-
-
+///////////////////////////////////////////////////////////////////////////////////////////////////
 double Trajectory::CalcSaferyDistanceCost(const MatrixXd& s2, double timeDuration) const
 {
 	double Cost = 0;
-	const double dt = cost_dt_;
+	const double dt = m_costDT;
 
-	double t = timeStart_;
+	double t = m_timeStart;
 	const int points = static_cast<int>(timeDuration / dt);
 
 	for (int i = 0; i < points; i++)
@@ -408,7 +338,7 @@ double Trajectory::CalcSaferyDistanceCost(const MatrixXd& s2, double timeDuratio
 		const double Ddist = Utils::distance(s1(3), s2(i, 1));
 		double velocity = s1(1);
 
-		Cost += calcSafetyDistanceCost(Sdist, Ddist, velocity);
+		Cost += CalcSafetyDistanceCost(Sdist, Ddist, velocity);
 
 		t += dt;
 	}
@@ -416,7 +346,7 @@ double Trajectory::CalcSaferyDistanceCost(const MatrixXd& s2, double timeDuratio
 	return Cost / points;
 }
 
-
+///////////////////////////////////////////////////////////////////////////////////////////////////
 static double CostFunction(double aDistance, double minDistance, double kSafetyDistance, double koeff = 2)
 {
 	const double a = -koeff;
@@ -426,6 +356,7 @@ static double CostFunction(double aDistance, double minDistance, double kSafetyD
 	return (0.95*eD + 0.05*eMD - eSD) / (eMD - eSD);
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
 inline double CalcLongitudialDistanceCost(double dist, double velocity)
 {
 	const double longMinDist = 10;
@@ -435,6 +366,7 @@ inline double CalcLongitudialDistanceCost(double dist, double velocity)
 	return CostFunction(dist, longMinDist, longSafetyDist);
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
 inline double CalcLateralDistanceCost(double dist)
 {
 	const double latMinDist = 2;
@@ -444,16 +376,10 @@ inline double CalcLateralDistanceCost(double dist)
 	return CostFunction(dist, latMinDist, latSafetyDist);
 }
 
-inline double Trajectory::calcSafetyDistanceCost(double longitudinalDist, double lateralDist, double velocity) const
+///////////////////////////////////////////////////////////////////////////////////////////////////
+inline double Trajectory::CalcSafetyDistanceCost(double longitudinalDist, double lateralDist, double velocity) const
 {
-//	const double longMinDist = 10;
-//	const double longSafetyDist = 1.2 * aVelocity;
-//	double longitudialCost = CostFunction(aLongitudinalDistance, longMinDist, longSafetyDist);
 	double longitudialCost = CalcLongitudialDistanceCost(longitudinalDist, velocity);
-
-//	const double latMinDist = 2;
-//	const double latSafetyDist = 3.75;
-//	double lateralCost = CostFunction(aLateralDistance, latMinDist, latSafetyDist);
 	double lateralCost = CalcLateralDistanceCost(lateralDist);
 
 	if (lateralDist > 4)
@@ -478,34 +404,18 @@ inline double Trajectory::calcSafetyDistanceCost(double longitudinalDist, double
 	return longitudialCost;
 }
 
-/*
-void Trajectory::PrintState() const
-{
-	std::cout << "StartT: " << timeStart_
-		<< " ----------- " << std::endl
-		<< " Dursation: " << durationS_
-		<< " ----------- " << endl
-		<< " StartState: " << startState_
-		<< " ----------- " << endl
-		<< " EndState: " << endState_
-		<< " ----------- " << endl
-		<< " S_coeff: " << S_coeffs_
-		<< " ----------- " << endl
-		<< " D_coeffs_: " << D_coeffs_
-		<< endl;
-}*/
-
+///////////////////////////////////////////////////////////////////////////////////////////////////
 void Trajectory::PrintInfo()
 {
 	const std::pair<double, double>& MinMaxV = MinMaxVelocity_S();
 
-	std::cout //<< "T: " << timeStart_
-		<< " startD: " << getStartD()
-		<< " endD: " << getTargetD()
-		<< " C: " << getTotalCost()
-		<< " DC: " << getSafetyDistanceCost()
-		<< " VC: " << getVelocityCost()
-		<< " JC: " << getJerkCost()
+	std::cout //<< "T: " << m_timeStart
+		<< " startD: " << GetStartD()
+		<< " endD: " << GetTargetD()
+		<< " C: " << GetTotalCost()
+		<< " DC: " << GetSafetyDistanceCost()
+		<< " VC: " << GetVelocityCost()
+		<< " JC: " << GetJerkCost()
 		<< " v_min: " << MinMaxV.first
 		<< " v_max: " << MinMaxV.second
 		<< endl;

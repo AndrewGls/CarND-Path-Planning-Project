@@ -6,14 +6,14 @@
 #include <unordered_map>
 
 
-// Helper class to predict position of vehicles after delayTime.
+// Helper class to Predict position of vehicles after delayTime.
 class SensorFusion
 {
 public:
 	SensorFusion() {}
 
-	void predict(double deltaTime);
-	void update (const std::vector<SensorFusionData>& sensorFusion, double currS, const Waypoints& map);
+	void Predict(double deltaTime);
+	void Update (const std::vector<SensorFusionData>& sensorFusion, double currS, const Waypoints& map);
 
 	// Returns all vehicles in the lane which are close to SDC car's S-position: [sdcStateV6(0)-deltaS, sdcStateV6(0)+deltaS].
 	TOtherCarsTrajectory GetOtherCarsTrajectoryInLane(const Eigen::VectorXd& sdcStateV6, int nLane, double timeDuration, double timeStep) const;

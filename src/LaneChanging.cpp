@@ -12,7 +12,7 @@ LaneChanging::LaneChanging(int nStartLane, int nTargetLane)
 
 }
 
-tuple<VehicleState*, TrajectoryPtr> LaneChanging::optimalTrajectory(const Eigen::VectorXd& currStateV6,
+tuple<VehicleState*, TrajectoryPtr> LaneChanging::OptimalTrajectory(const Eigen::VectorXd& currStateV6,
 											double currTime,
 											const SensorFusion& rSF)
 {
@@ -29,8 +29,8 @@ tuple<VehicleState*, TrajectoryPtr> LaneChanging::optimalTrajectory(const Eigen:
 
 	TrajectoryPool pool(m_SpeedLimit, m_HorizontPrediction);
 	
-	pool.setOtherCars(rSF.GetOtherCarsTrajectoryInLane(currStateV6, m_nTargetLane, m_HorizontPrediction, m_TimeStep));
-	pool.addOtherCars(rSF.GetOtherCarsTrajectoryInLane(currStateV6, m_nStartLane, m_HorizontPrediction, m_TimeStep));
+	pool.SetOtherCars(rSF.GetOtherCarsTrajectoryInLane(currStateV6, m_nTargetLane, m_HorizontPrediction, m_TimeStep));
+	pool.AddOtherCars(rSF.GetOtherCarsTrajectoryInLane(currStateV6, m_nStartLane, m_HorizontPrediction, m_TimeStep));
 
 	{
 		for (double v = 0; v < m_SpeedLimit; v += 1)
@@ -38,16 +38,16 @@ tuple<VehicleState*, TrajectoryPtr> LaneChanging::optimalTrajectory(const Eigen:
 			for (double T = 1; T < maxT; T += 1)
 			{
 				TrajectoryPtr pTraj = Trajectory::VelocityKeeping_STrajectory(currStateV6, targetD, v, currTime, T, changingLaneTime);
-				pool.addTrajectory(pTraj);
+				pool.AddTrajectory(pTraj);
 			}
 		}
 	}
 
 
 	VehicleState* pNextState = this;
-	TrajectoryPtr pOptimalTraj = pool.optimalTrajectory();
+	TrajectoryPtr pOptimalTraj = pool.OptimalTrajectory();
 
-	assert(targetD == pOptimalTraj->getTargetD());
+	assert(targetD == pOptimalTraj->GetTargetD());
 
 	if (std::abs(targetD - currentD) < 0.1)
 	{
@@ -60,14 +60,14 @@ tuple<VehicleState*, TrajectoryPtr> LaneChanging::optimalTrajectory(const Eigen:
 #ifdef VERBOSE_BEST_TRAJECTORY
 	cout << "------- Best ----------" << endl;
 	cout << " CHANGE: " << std::abs(targetD - currentD)
-		<< " v: " << pOptimalTraj->DE_V
-		<< " T: " << pOptimalTraj->getDurationS()
-		<< " startD: " << pOptimalTraj->getStartD()
-		<< " endD: " << pOptimalTraj->getTargetD()
-		<< " C: " << pOptimalTraj->getTotalCost()
-		<< " DC: " << pOptimalTraj->getSafetyDistanceCost()
-		<< " VC: " << pOptimalTraj->getVelocityCost()
-		<< " JC: " << pOptimalTraj->getJerkCost()
+		<< " v: " << pOptimalTraj->TragetVelocity()
+		<< " T: " << pOptimalTraj->GetDurationS()
+		<< " startD: " << pOptimalTraj->GetStartD()
+		<< " endD: " << pOptimalTraj->GetTargetD()
+		<< " C: " << pOptimalTraj->GetTotalCost()
+		<< " DC: " << pOptimalTraj->GetSafetyDistanceCost()
+		<< " VC: " << pOptimalTraj->GetVelocityCost()
+		<< " JC: " << pOptimalTraj->GetJerkCost()
 		<< endl;
 	cout << "------- Best ----------" << endl;
 #endif // #ifdef VERBOSE_BEST_TRAJECTORY

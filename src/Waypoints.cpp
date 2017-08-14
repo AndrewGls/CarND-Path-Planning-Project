@@ -25,20 +25,20 @@ Waypoints::Waypoints()
 		iss >> wp.s;
 		iss >> wp.d_x;
 		iss >> wp.d_y;
-		waypoints_.push_back(wp);
+		m_waypoints.push_back(wp);
 	}
 
-	fit_spline();
+	FitSpline();
 }
 
 
-Point Waypoints::getXYInterpolated(double s, double d) const
+Point Waypoints::GetXYInterpolated(double s, double d) const
 {
-	s = norm_s(s);
+	s = NormalizeS(s);
 
-	Point pt(x_spline_(s), y_spline_(s));
+	Point pt(m_x_spline(s), m_y_spline(s));
 	// normal vector
-	Point nv(-y_spline_.deriv(1,s), x_spline_.deriv(1,s));
+	Point nv(-m_y_spline.deriv(1,s), m_x_spline.deriv(1,s));
 	return pt + nv * d;
 }
 
@@ -55,69 +55,69 @@ Vector2d Waypoints::CalcFrenet(const Point& ptXY, double s_start) const
 	while (prev_step_size > precision)
 	{
 		const auto prev_s = s;
-		s -= gamma * error_deriv(ptXY, prev_s);
+		s -= gamma * ErrorDeriv(ptXY, prev_s);
 		prev_step_size = std::abs(s - prev_s);
 	}
 
 	Vector2d p(2);
 	p << ptXY.x, ptXY.y;
 
-	const Vector2d p_spline(x_spline_(s), y_spline_(s));
+	const Vector2d p_spline(m_x_spline(s), m_y_spline(s));
 //	std::cout << ptXY.x << ", " << ptXY.y << "| " << p_spline << std::endl;
 
-	const Vector2d p_delta = (p - p_spline).array() / get_normal_at(s).array();
+	const Vector2d p_delta = (p - p_spline).array() / GetNormalAt(s).array();
 	//std::cout << "p_delta: " << p_delta << std::endl;
-	//std::cout << "normal: " << get_normal_at(s) << std::endl;
+	//std::cout << "normal: " << GetNormalAt(s) << std::endl;
 	const double d = 0.5 * (p_delta(0) + p_delta(1));
 	return Vector2d(s, d);
 }
 
-double Waypoints::error_deriv(const Point& pt, double s) const
+double Waypoints::ErrorDeriv(const Point& pt, double s) const
 {
-	return -2. * (pt.x - x_spline_(s)) * x_spline_.deriv(1, s)
-		- 2. * (pt.y - y_spline_(s)) * y_spline_.deriv(1, s);
+	return -2. * (pt.x - m_x_spline(s)) * m_x_spline.deriv(1, s)
+		- 2. * (pt.y - m_y_spline(s)) * m_y_spline.deriv(1, s);
 }
 
-Vector2d Waypoints::get_normal_at(double s) const
+Vector2d Waypoints::GetNormalAt(double s) const
 {
-	return Vector2d(-y_spline_.deriv(1, s), x_spline_.deriv(1, s));
+	return Vector2d(-m_y_spline.deriv(1, s), m_x_spline.deriv(1, s));
 }
 
-void Waypoints::fit_spline()
+void Waypoints::FitSpline()
 {
 	// Spline fitting
-//	sort(waypoints_.begin(), waypoints_.end(), [](const Waypoint& l, const Waypoint& r) {return l.s < r.s; });
+//	sort(m_waypoints.begin(), m_waypoints.end(), [](const Waypoint& l, const Waypoint& r) {return l.s < r.s; });
 
 #if 1
 	//------------------------------------
 	// Fix of kink at the end of the track!
-	Waypoint wpF = waypoints_.front();
-	Waypoint wpL = waypoints_.back();
+	Waypoint wpF = m_waypoints.front();
+	Waypoint wpL = m_waypoints.back();
 
 	Waypoint wp1 = wpL;
-	wp1.s -= max_s_;
+	wp1.s -= m_max_S;
 
 	Waypoint wp2 = wpF;
-	wp2.s += max_s_;
+	wp2.s += m_max_S;
 
-	waypoints_.insert(waypoints_.begin(), wp1);
-	waypoints_.push_back(wp2);
+	m_waypoints.insert(m_waypoints.begin(), wp1);
+	m_waypoints.push_back(wp2);
 	//------------------------------------
 #endif
 
 
 	vector<double> x, y, s;
-	x.resize(waypoints_.size());
-	y.resize(waypoints_.size());
-	s.resize(waypoints_.size());
-	for (size_t i = 0; i < waypoints_.size(); i++) {
-		const auto& w = waypoints_[i];
+	x.resize(m_waypoints.size());
+	y.resize(m_waypoints.size());
+	s.resize(m_waypoints.size());
+	for (size_t i = 0; i < m_waypoints.size(); i++) {
+		const auto& w = m_waypoints[i];
 		x[i] = w.x;
 		y[i] = w.y;
 		s[i] = w.s;
 	}
 
-	x_spline_.set_points(s, x);
-	y_spline_.set_points(s, y);
+	m_x_spline.set_points(s, x);
+	m_y_spline.set_points(s, y);
 }
 

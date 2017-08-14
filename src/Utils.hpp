@@ -54,12 +54,4 @@ namespace Utils
 		assert(nLaneNumber >= 0 && nLaneNumber < 3);
 		return laneCenter[nLaneNumber];
 	}
-
-
-	inline double braking_distance(double speed, double mu = 0.7)
-	{
-		static constexpr double g = 9.8; // g is the gravity of Earth
-		return speed*speed / (2 * mu * g);
-	}
-
 }

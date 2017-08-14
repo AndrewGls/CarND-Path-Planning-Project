@@ -11169,7 +11169,7 @@ basic_json_parser_74:
                     {
                         // copy the data into the local buffer or tempstr, if
                         // buffer is too small; replace decimal separator, and
-                        // update data to point to the modified bytes
+                        // Update data to point to the modified bytes
                         if ((len + 1) < buf.size())
                         {
                             std::copy(m_start, m_end, buf.begin());
