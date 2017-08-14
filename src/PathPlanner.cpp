@@ -1,4 +1,4 @@
-#include "Behavior.h"
+#include "PathPlanner.h"
 #include "LineKeeping.h"
 #include <iostream>
 #include <assert.h>
@@ -9,13 +9,13 @@ using Eigen::MatrixXd;
 
 using namespace std;
 
-Behavior::Behavior()
+PathPlanner::PathPlanner()
 {
 	m_states.reserve(2);
 	m_states.push_back(std::make_unique<LineKeeping>());
 }
 
-TrajectoryPtr Behavior::optimalTrajectory (const VectorXd& currStateX6, double currTime, const SensorFusion& sensorFusion)
+TrajectoryPtr PathPlanner::optimalTrajectory (const VectorXd& currStateX6, double currTime, const SensorFusion& sensorFusion)
 {
 	assert(m_states.size() < 3);
 

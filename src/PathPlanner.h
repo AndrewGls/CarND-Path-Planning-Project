@@ -8,10 +8,10 @@
 #include <memory>
 
 
-class Behavior
+class PathPlanner
 {
 public:
-	Behavior();
+	PathPlanner();
 
 	// currStateX6 is a vector of size 6: [s, s_d, s_dd, d, d_d, d_dd]
 	TrajectoryPtr optimalTrajectory(const Eigen::VectorXd& currStateX6, double currTime, const SensorFusion& sensorFusion);

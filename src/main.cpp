@@ -87,7 +87,7 @@ int main() {
 
           	json msgJson;
 
-			vector<SensorFusionData>& sf_data = vehicle.getSensorFusionStorage();
+			vector<SensorFusionData>& sf_data = vehicle.SensorFusionStorage();
 			sf_data.resize(sensor_fusion.size());
 			for (int i = 0; i < sensor_fusion.size(); i++)
 			{
@@ -102,7 +102,7 @@ int main() {
 			}
 
 			vLocal.d = -vLocal.d;
-			vehicle.updateTrajectory(vLocal, previous_path_x, previous_path_y);
+			vehicle.UpdateTrajectory(vLocal, previous_path_x, previous_path_y);
 
           	// TODO: define a path made up of (x,y) points that the car will visit sequentially every .02 seconds
 			msgJson["next_x"] = vehicle.get_next_x_vals();

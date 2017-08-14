@@ -19,7 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\Behavior.cpp" />
+    <ClCompile Include="..\src\PathPlanner.cpp" />
     <ClCompile Include="..\src\Waypoints.cpp" />
     <ClCompile Include="..\src\LaneChanging.cpp" />
     <ClCompile Include="..\src\LineKeeping.cpp" />
@@ -40,7 +40,7 @@
     <ClCompile Include="..\src\Vehicle.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\Behavior.h" />
+    <ClInclude Include="..\src\PathPlanner.h" />
     <ClInclude Include="..\src\LaneChanging.h" />
     <ClInclude Include="..\src\Waypoints.h" />
     <ClInclude Include="..\src\json.hpp" />

@@ -1,5 +1,8 @@
 #pragma once
 
+#ifndef TYPES_H
+#define TYPES_H
+
 #include "Eigen-3.3/Eigen/Eigen"
 #include "Eigen-3.3/Eigen/Core"
 #include <limits>
@@ -69,10 +72,4 @@ struct SensorFusionData
 	double d;
 };
 
-
-enum FiniteState
-{
-	fs_start,
-	fs_keep_lane
-};
-
+#endif // TYPES_H

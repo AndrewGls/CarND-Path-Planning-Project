@@ -10,108 +10,83 @@ using Eigen::Vector2d;
 
 using namespace std;
 
-namespace {
-	static constexpr double buffer_distance = 2;   // m units, distance between vehicles when speed is clise to 0.
-	static constexpr double lane_wide = 4;        // each lane is 4 m wide
-}
-
 
 //////////////////////////////////////////////////////////////////////////////////////////
-Vehicle::Vehicle(const Waypoints& map)
-	: map_(map)
-	, state_(fs_keep_lane)
-	, initDone_(false)
+Vehicle::Vehicle(const Waypoints& wps)
+	: m_waypoints(wps)
+	, m_isInitDone(false)
 {
-//	std::cout.setf(std::ios::fixed);
-//	std::cout.precision(2);
-
-	currStateV6_ = VectorXd::Zero(6);
-
-	target_speed_ = speed_limit_;
+	m_currStateV6 = VectorXd::Zero(6);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-void Vehicle::updateTrajectory(const CarLocalizationData& newState,
+void Vehicle::UpdateTrajectory(const CarLocalizationData& newState,
 							   const vector<double>& previous_path_x,
 							   const vector<double>& previous_path_y)
 {
-	const int nPredictionPathSize = int(predictionHorizont_ * 1000) / 20;
-	const int nReactivePathSize = int(reactiveHorizont_ * 1000) / 20;
+	const int nPredictionPathSize = int(m_predictionHorizont * 1000) / 20;
+	const int nReactivePathSize = int(m_reactiveHorizont * 1000) / 20;
 
-	next_x_vals_.clear();
-	next_y_vals_.clear();
+	m_next_x_vals.clear();
+	m_next_y_vals.clear();
 
-	if (!initDone_)
+	if (!m_isInitDone)
 	{
 		// first time/reset
 		const double velocity = newState.speed * 0.44704;  // convert MPH to m/sec !!!!
-		currTime_ = 0;
-		const Vector2d& initialFrenet = map_.CalcFrenet(Point(newState.x, newState.y), newState.s);
-		currStateV6_ << initialFrenet(0), velocity, 0., initialFrenet(1), 0., 0.;
-		initDone_ = true;
+		m_currTime = 0;
+		const Vector2d& initialFrenet = m_waypoints.CalcFrenet(Point(newState.x, newState.y), newState.s);
+		m_currStateV6 << initialFrenet(0), velocity, 0., initialFrenet(1), 0., 0.;
+		m_isInitDone = true;
 	}
 
-	const int nPrevPathSize = (int) previous_path_x.size();
+	const int nPrevPathSize = static_cast<int>(previous_path_x.size());
 	int nPrevPredictionPathSize = nPrevPathSize - (nPredictionPathSize - nReactivePathSize);
 	nPrevPredictionPathSize = max(0, nPrevPredictionPathSize);
 	for (int i = 0; i < nPrevPredictionPathSize; ++i)
 	{
-		next_x_vals_.push_back(previous_path_x[i]);
-		next_y_vals_.push_back(previous_path_y[i]);
+		m_next_x_vals.push_back(previous_path_x[i]);
+		m_next_y_vals.push_back(previous_path_y[i]);
 	}
 
 	// Predict position of vehicles after delay-time:
 	const double delayTime = nPrevPredictionPathSize * Utils::delta_t;
-	sensorFusion_.update(sf_data_, currStateV6_(0), map_);
-	sensorFusion_.predict(delayTime);
+	m_sensorFusion.update(m_sensorFusionData, m_currStateV6(0), m_waypoints);
+	m_sensorFusion.predict(delayTime);
 
-	TrajectoryPtr pTraj = m_behavior.optimalTrajectory(currStateV6_, currTime_, sensorFusion_);
+	TrajectoryPtr pTraj = m_behavior.optimalTrajectory(m_currStateV6, m_currTime, m_sensorFusion);
 
 #ifdef VERBOSE_NEXT_XY
 	cout << "------- Driving path ----------" << endl;
 #endif
 
-	double curr_time = currTime_;
-	Eigen::VectorXd curr_state = currStateV6_;
+	double currTime = m_currTime;
+	Eigen::VectorXd currState = m_currStateV6;
 
 	for (int i = nPrevPredictionPathSize; i < nPredictionPathSize; ++i)
 	{
 		if (i == nReactivePathSize)
 		{
-			currTime_ = curr_time;
-			currStateV6_ = curr_state;
+			m_currTime = currTime;
+			m_currStateV6 = currState;
 		}
 
-		const auto pt = map_.getXYInterpolated(curr_state(0), curr_state(3));
-		curr_time += Utils::delta_t;
-		curr_state = pTraj->EvaluateStateAt(curr_time);
+		const auto pt = m_waypoints.getXYInterpolated(currState(0), currState(3));
+		currTime += Utils::delta_t;
+		currState = pTraj->EvaluateStateAt(currTime);
 
-		next_x_vals_.push_back(pt.x);
-		next_y_vals_.push_back(pt.y);
+		m_next_x_vals.push_back(pt.x);
+		m_next_y_vals.push_back(pt.y);
 
 #ifdef VERBOSE_NEXT_XY
-		cout << "s: " << curr_state(0)
-			<< " d: " << curr_state(3)
+		cout << "s: " << currState(0)
+			<< " d: " << currState(3)
 			<< " (" << pt.x << ", " << pt.y << ") "
-			<< " v: " << curr_state(1)
-			<< " a: " << curr_state(2);
+			<< " v: " << currState(1)
+			<< " a: " << currState(2);
 		cout << endl;
 #endif // VERBOSE_NEXT_XY
 	}
 
-	//assert(next_x_vals_.size() == nPredictionPathSize);
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////
-double Vehicle::braking_distance(double speed) const
-{
-	static constexpr double g = 9.8; // g is the gravity of Earth
-	return speed*speed / (2 * mu_ * g);
-}
-
-
-//////////////////////////////////////////////////////////////////////////////////////////
-double Vehicle::get_min_distance(double speed) const
-{
-	return braking_distance(speed) + buffer_distance;
+	//assert(m_next_x_vals.size() == nPredictionPathSize);
 }
