@@ -40,7 +40,7 @@ public:
 	double CalcAccelCost(double timeDuration) const;
 	double CalcVelocityCost(double targetVelocity, double timeDuration) const;
 	double CalcSaferyDistanceCost(const Eigen::MatrixXd& s2, double timeDuration) const;
-	double CalcLaneOffsetCost(double timeDuration) const { return 0; }
+	double CalcLaneOffsetCost(double timeDuration) const;
 	std::pair<double, double> MinMaxVelocity_S() const;
 
 	// Returns trajectory duration in seconds.
@@ -58,11 +58,13 @@ public:
 	void SetAccelCost(double cost)			{ m_cost(1) = cost; }
 	void SetVelocityCost (double cost)		{ m_cost(2) = cost; }
 	void SetSafetyDistanceCost (double cost)	{ m_cost(3) = cost; }
+	void SetLaneOffsetCost(double cost)		{ m_cost(4) = cost; }
 
 	double GetJerkCost() const			{ return m_cost(0); }
 	double GetAccelCost() const			{ return m_cost(1); }
 	double GetVelocityCost() const		{ return m_cost(2); }
 	double GetSafetyDistanceCost() const { return m_cost(3); }
+	double GetLaneOffsetCost() const	{ return m_cost(4); }
 
 	double TragetVelocity() const { return m_tragetVelocity; }
 	void PrintInfo();
@@ -99,7 +101,7 @@ private:
 	double m_costDT = 0.1;  // time step along a trajectory used during evaluation of trajectory-cost.
 	double m_tragetVelocity;
 
-	Eigen::VectorXd m_cost{ Eigen::VectorXd::Zero(4) };
+	Eigen::VectorXd m_cost{ Eigen::VectorXd::Zero(5) };
 
 	Eigen::VectorXd m_startState; // [s, s_dot, s_ddot, d, d_dot, d_ddot]
 	Eigen::VectorXd m_endState;   // [s, s_dot, s_ddot, d, d_dot, d_ddot]

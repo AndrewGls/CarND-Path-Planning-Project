@@ -37,4 +37,5 @@ private:
 	static constexpr double AccelCostWeight = 1;
 	static constexpr double VelocityCostWeight = 0.5;
 	static constexpr double SaferyDistCostWeight = 1000;
+	static constexpr double LaneOffsetCostWeight = 0.5;
 };

@@ -55,6 +55,7 @@ void TrajectoryPool::CalcTrajectoryCost(TrajectoryPtr pTraj)
 	double maxJs, maxJd;
 	double JerkCost = JerkCostWeight * pTraj->CalcJerkCost(m_HorizontPrediction, maxJs, maxJd);
 	const double AccelCost = AccelCostWeight * pTraj->CalcAccelCost(m_HorizontPrediction);
+	const double LaneOffsetCost = LaneOffsetCostWeight * pTraj->CalcLaneOffsetCost(m_HorizontPrediction);
 
 	const std::pair<double, double>& MinMaxVelocity = pTraj->MinMaxVelocity_S();
 	double VelocityCost = VelocityCostWeight * pTraj->CalcVelocityCost(m_SpeedLimit, m_HorizontPrediction);
@@ -84,7 +85,7 @@ void TrajectoryPool::CalcTrajectoryCost(TrajectoryPtr pTraj)
 	pTraj->SetAccelCost(AccelCost);
 	pTraj->SetVelocityCost(VelocityCost);
 	pTraj->SetSafetyDistanceCost(SaferyDistCost);
-
+	pTraj->SetLaneOffsetCost(LaneOffsetCost);
 
 #ifdef VERBOSE_TRAJECTORIES
 	Eigen::VectorXd currStateV6 = pTraj->GetStartState();

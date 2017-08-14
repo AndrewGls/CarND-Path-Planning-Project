@@ -291,7 +291,7 @@ double Trajectory::CalcVelocityCost(double targetVelocity, double timeDuration) 
 {
 //	PrintState();
 
-	double Cost = 0;
+	double cost = 0;
 	double t = 0;
 	const int points = static_cast<int>(timeDuration / m_costDT);
 
@@ -307,7 +307,7 @@ double Trajectory::CalcVelocityCost(double targetVelocity, double timeDuration) 
 			v = 1e6; 
 		}
 
-		Cost += std::pow(targetVelocity - v, 2);
+		cost += std::pow(targetVelocity - v, 2);
 		t += m_costDT;
 /*
 		std::cout
@@ -319,17 +319,15 @@ double Trajectory::CalcVelocityCost(double targetVelocity, double timeDuration) 
 			*/
 	}
 
-	return Cost / points;
+	return cost / points;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 double Trajectory::CalcSaferyDistanceCost(const MatrixXd& s2, double timeDuration) const
 {
-	double Cost = 0;
-	const double dt = m_costDT;
-
+	double cost = 0;
 	double t = m_timeStart;
-	const int points = static_cast<int>(timeDuration / dt);
+	const int points = static_cast<int>(timeDuration / m_costDT);
 
 	for (int i = 0; i < points; i++)
 	{
@@ -338,23 +336,33 @@ double Trajectory::CalcSaferyDistanceCost(const MatrixXd& s2, double timeDuratio
 		const double Ddist = Utils::distance(s1(3), s2(i, 1));
 		double velocity = s1(1);
 
-		Cost += CalcSafetyDistanceCost(Sdist, Ddist, velocity);
+		cost += CalcSafetyDistanceCost(Sdist, Ddist, velocity);
 
-		t += dt;
+		t += m_costDT;
 	}
 
-	return Cost / points;
+	return cost / points;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-static double CostFunction(double aDistance, double minDistance, double kSafetyDistance, double koeff = 2)
+static double CostFunction(double dist, double minDist, double safetyDist, double koeff = 2)
 {
 	const double a = -koeff;
-	const double eMD = std::exp(a * minDistance);
-	const double eSD = std::exp(a * kSafetyDistance);
-	const double eD = std::exp(a * aDistance);
+	const double eMD = std::exp(a * minDist);
+	const double eSD = std::exp(a * safetyDist);
+	const double eD = std::exp(a * dist);
 	return (0.95*eD + 0.05*eMD - eSD) / (eMD - eSD);
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+/*static double CostFunction(double distance, double minDistance, double safetyDist, double koeff = 2)
+{
+	const double a = 2;
+	if (distance > minDistance)
+		return 0;
+	return 1. + 0.95 * (exp(-a*(distance - minDistance)) - 1);
+}*/
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 inline double CalcLongitudialDistanceCost(double dist, double velocity)
@@ -370,8 +378,8 @@ inline double CalcLongitudialDistanceCost(double dist, double velocity)
 inline double CalcLateralDistanceCost(double dist)
 {
 	const double latMinDist = 2;
-	const double latSafetyDist = 3.75;
-	if (dist > dist)
+	const double latSafetyDist = 3.8;
+	if (dist > latSafetyDist)
 		return 0;
 	return CostFunction(dist, latMinDist, latSafetyDist);
 }
@@ -405,19 +413,50 @@ inline double Trajectory::CalcSafetyDistanceCost(double longitudinalDist, double
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+inline double CalcLaneOffsetCost(double d)
+{
+	const int nLane = Utils::DtoLaneNumber(d);
+	if (nLane == -1)
+		return 1e6;
+	const double laneCenter = Utils::LaneNumberToD(nLane);
+	const double distToCenter = Utils::distance(d, laneCenter);
+	const double minDist = Utils::LaneWidth / 2.;
+	const double safetyDist = 0.25;
+	return CostFunction(distToCenter, minDist, safetyDist);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+double Trajectory::CalcLaneOffsetCost(double timeDuration) const
+{
+	double cost = 0;
+	double t = m_timeStart;
+	const int points = static_cast<int>(timeDuration / m_costDT);
+
+	for (int i = 0; i < points; i++)
+	{
+		const double d = calc_polynomial_distance_at(m_Dcoeffs, std::min(t, m_durationD));
+		cost += CalcLaneOffsetCost(d);
+		t += m_costDT;
+	}
+
+	return cost / points;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
 void Trajectory::PrintInfo()
 {
 	const std::pair<double, double>& MinMaxV = MinMaxVelocity_S();
 
 	std::cout //<< "T: " << m_timeStart
-		<< " startD: " << GetStartD()
+//		<< " startD: " << GetStartD()
 		<< " endD: " << GetTargetD()
 		<< " C: " << GetTotalCost()
-		<< " DC: " << GetSafetyDistanceCost()
-		<< " VC: " << GetVelocityCost()
 		<< " JC: " << GetJerkCost()
-		<< " v_min: " << MinMaxV.first
-		<< " v_max: " << MinMaxV.second
+		<< " VC: " << GetVelocityCost()
+		<< " DC: " << GetSafetyDistanceCost()
+		<< " LC: " << GetLaneOffsetCost()
+//		<< " v_min: " << MinMaxV.first
+//		<< " v_max: " << MinMaxV.second
 		<< endl;
 
 }
