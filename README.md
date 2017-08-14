@@ -9,6 +9,31 @@ A Path-Planner generates a set of trajectories with different target speed, dura
 
 ![change-lane][image1]
 
+#### Coordinate System for Motion Planning ####
+Motion Planning is implemented in the FRENET´ FRAME. All transformations from FRENET´ FRAME coordinates to Cartesian coordinates are supported by special class Waypoints, which loads waypoint coordinates as [x,y,s,dx,dy] values from special file, supplied to the project, and fits two bsplines x(s) and y(s) - the x and y coordinates as functions of longitudinal parameter s.
+
+Transformation from FRENET coordinates (s,d) to Cartesian coordinates is implemented in two steps: evaluation of splines at the (s) coordinate and adding shift on the value (d) along normal to the splines:
+
+\begin{equation}
+  \begin{bmatrix}
+    x \\ y
+  \end{bmatrix}
+  =
+  \begin{bmatrix}
+    f_x(s) \\
+    f_y(s)
+  \end{bmatrix}
+  +
+  d\cdot
+  \begin{bmatrix}
+    f_y'(s) \\
+    f_x'(s)
+  \end{bmatrix}
+  \label{eq:frenet_coordinates}
+\end{equation}
+
+
+
 ### Simulator. You can download the Term3 Simulator BETA which contains the Path Planning Project from the [releases tab](https://github.com/udacity/self-driving-car-sim/releases).
 
 #### The map of the highway is in data/highway_map.txt
