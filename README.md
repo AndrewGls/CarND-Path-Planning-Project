@@ -17,6 +17,10 @@ Transformation from FRENET coordinates (s,d) to Cartesian coordinates is impleme
                         [x  y]^t = [Fx(s)  Fy(s)]^t + d * [Fx'(s)  Fy'(s)]
 
 
+                      
+                        In the process...
+                      
+
 
 ### Simulator. You can download the Term3 Simulator BETA which contains the Path Planning Project from the [releases tab](https://github.com/udacity/self-driving-car-sim/releases).
 
