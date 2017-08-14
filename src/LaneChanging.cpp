@@ -27,7 +27,10 @@ tuple<VehicleState*, TrajectoryPtr> LaneChanging::OptimalTrajectory(const Eigen:
 	const double targetD = Utils::LaneNumberToD(m_nTargetLane);
 	const double changingLaneTime = 4;
 
-	TrajectoryPool pool(m_SpeedLimit, m_HorizontPrediction);
+	const int nCurrLane = Utils::DtoLaneNumber(currStateV6(3));
+	const double MaxVelosityCorrected = GetCorrectedVelocity(m_SpeedLimit, nCurrLane);
+
+	TrajectoryPool pool(MaxVelosityCorrected, m_HorizontPrediction);
 	
 	pool.SetOtherCars(rSF.GetLeadingCarsTrajectoryInLane(currStateV6, m_nStartLane, m_HorizontPrediction, m_TimeStep));
 	pool.AddOtherCars(rSF.GetOtherCarsTrajectoryInLane(currStateV6, m_nTargetLane, m_HorizontPrediction, m_TimeStep));

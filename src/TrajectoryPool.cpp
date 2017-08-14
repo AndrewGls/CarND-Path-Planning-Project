@@ -7,7 +7,7 @@ using namespace std;
 
 
 TrajectoryPool::TrajectoryPool(double speedLimit, double timeHorizon)
-	:m_SpeedLimit(speedLimit)
+	: m_SpeedLimit(speedLimit)
 	, m_HorizontPrediction(timeHorizon)
 {
 }
