@@ -12,25 +12,9 @@ A Path-Planner generates a set of trajectories with different target speed, dura
 #### Coordinate System for Motion Planning ####
 Motion Planning is implemented in the FRENET´ FRAME. All transformations from FRENET´ FRAME coordinates to Cartesian coordinates are supported by special class Waypoints, which loads waypoint coordinates as [x,y,s,dx,dy] values from special file, supplied to the project, and fits two bsplines x(s) and y(s) - the x and y coordinates as functions of longitudinal parameter s.
 
-Transformation from FRENET coordinates (s,d) to Cartesian coordinates is implemented in two steps: evaluation of splines at the (s) coordinate and adding shift on the value (d) along normal to the splines:
+Transformation from FRENET coordinates (s,d) to Cartesian coordinates is implemented in two steps: evaluation of splines Fx(s) and Fy(s) at the s-coordinate and adding shift on the d-value along normal to the splines:
 
-\begin{equation}
-  \begin{bmatrix}
-    x \\ y
-  \end{bmatrix}
-  =
-  \begin{bmatrix}
-    f_x(s) \\
-    f_y(s)
-  \end{bmatrix}
-  +
-  d\cdot
-  \begin{bmatrix}
-    f_y'(s) \\
-    f_x'(s)
-  \end{bmatrix}
-  \label{eq:frenet_coordinates}
-\end{equation}
+                        [x  y]^t = [Fx(s)  Fy(s)]^t + d * [Fx'(s)  Fy'(s)]
 
 
 
