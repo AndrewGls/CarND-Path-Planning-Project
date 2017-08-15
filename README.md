@@ -9,7 +9,7 @@ A Path-Planner generates a set of trajectories with different target speed, dura
 
 ![change-lane][image1]
 
-#### Coordinate System for Motion Planning ####
+### Coordinate System for Motion Planning ###
 Motion Planning is implemented in the FRENET´ FRAME. All transformations from FRENET´ FRAME coordinates to Cartesian coordinates are supported by special class Waypoints, which loads waypoint coordinates as [x,y,s,dx,dy] values from special file, supplied to the project, and fits two bsplines x(s) and y(s) - the x and y coordinates as functions of longitudinal s-parameter.
 
 Transformation from FRENET coordinates (s,d) to Cartesian coordinates is implemented in two steps: evaluation of splines Fx(s) and Fy(s) at the s-coordinate and adding shift on the d-value along normal to the splines:
@@ -21,6 +21,40 @@ During the first run, the position of the vehicle in Frenet space is initialized
                           Jxy(s) = sqrt( (x – Fx(s))^2 + (y – Fy(s))^2 )
                           
 After that, during the second step, the (x, y) points is computed using formula (1), using d-coordinate. This Inverse transformation is added because the simulator doesn't provide the vehicle with the accurate position in Frenet space.
+
+
+
+### Jerk Minimizing Trajectories ###
+#### 1	Velocity Keeping Trajectories ####
+Velocity Keeping Trajectory is the common state where the car spends most of the time, trying to follow the leading car as close as possible with keeping speed limit and safety distance to it. The path for this state is generated as jerk minimizing trajectories using quintic polynomials [Optimal Trajectory Generation For Dynamic Street Scenarious in A Frenet Frame](https://www.researchgate.net/publication/224156269):
+
+                          s(t) = a0+ a1*t + a2*t^2 + a3*t^3 +a4*t^4
+                          s’(t) = a1 + 2*a2*t + 3*a3*t^2 + 4*a4*t^3               (2)
+                          s’’(t) = 2*a2 + 6*a3*t +12*a4*t^2
+                          
+The boundary conditions for the current state at the star t=0 of the trajectory are the longitudinal position s0, velocity s0_dot and acceleration s0_dot_dot. Using the start condition, the following three parameters can be found as:
+
+                          s0 = a0
+                          s0_dot = a1                                             (3)
+                          s0_dot_dot = 2*a2
+                          
+The boundary conditions at the end t=T of the trajectory are the longitudinal velocity s1_dot and acceleration s1_dot_dot, which is commonly zero. Using (2) and (3), the other a3 and a4 parameters can be calculated using the following linear equation system:
+
+                          s1_dot =s0_dot + s0_dot_dot * T + 3 * a3 * T^2 + 4*a4*T^3
+                          s1_dot_dot = s0_dot_dot + 6 * a3 * T + 12 * a4 * T^2
+Or using matrix form:
+                          | s1_dot – s0_dot – s0_dot_dot * T |   | 3T^2   4T^3 |   | a3 |
+                          |                                  | = |             | x |    |
+                          |    s1_dot_dot – s0_dot_dot       |   | 6T    12T^2 |   | a4 |
+
+The boundary conditions at the start and end states for lateral component are: d0=d1=d, d0_dot=d1_dot=0 and d0_dot_dot=d1_dot_dot=0
+
+#### 2 Lane Changing Trajectories ####
+This type of trajectory is generated as a combination of  quartic polynomial trajectory, for the longitudinal component s, using Velocity Keeping Trajectories, with  a quintic polynomial for the lateral component d, using the following linear equation system:
+
+      | d1 – d0 – d0_dot – 0.05 * d0_dot_dot * T^2 |   |  T^3    T^4    T^5 |   | a3 |
+      | d1_dot – d0_dot – d0_dot_dot * T           | = | 3T^2   4T^3   5T^4 | x | a4 |
+      | d1_dot_dot – d0_dot_dot                    |   | 6T    12T^2  20T^3 |   | a5 |
 
 
 
