@@ -42,7 +42,7 @@ The boundary conditions at the end t=T of the trajectory are the longitudinal ve
 
                           s1_dot =s0_dot + s0_dot_dot * T + 3 * a3 * T^2 + 4*a4*T^3
                           s1_dot_dot = s0_dot_dot + 6 * a3 * T + 12 * a4 * T^2
-Or using matrix form:
+Or using matrix form: 
                           | s1_dot – s0_dot – s0_dot_dot * T |   | 3T^2   4T^3 |   | a3 |
                           |                                  | = |             | x |    |
                           |    s1_dot_dot – s0_dot_dot       |   | 6T    12T^2 |   | a4 |
