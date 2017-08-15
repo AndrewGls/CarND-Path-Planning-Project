@@ -105,7 +105,11 @@ The Lane Keeping state is the default state of the car, implemented as a class L
 The Lane Changing state is implemented as a class LaneChanging, and is responsible for executing a safe lane change maneuver. When this state is started to execute, the car has already started to move into the direction of target lane. The lane changing state starts to generate target trajectories with variation of target velocity and duration T along s-direction. For the lateral d-direction, a quintic polynomial trajectory is generated with the target d-coordinate in the center of the target lane and with a fixed lane change duration. During evaluation of all candidate trajectories, the predicted trajectories of all nearby cars at the same lane are used for estimation and keeping a safety distance cost Js to surrounding cars.
 When the lateral d-distance is close to the target d-value, which is the center of lane in Frenet coordinates, the changing lane state is deactivated by returning the nullptr into PathPlanner. The Path Planner detects the nullptr value and removes the Lane Changing state from the queue of active states. As a result, the Lane Keeping will be used during next iteration.
 
+### Results ###
+The implemented path planner is able to navigate safely through highway traffic with speed close to target speed limit. The car is able to keep lane with speed limit if the current lane is empty or execute safety maneuvers in order to overpass slow cars. Bellow, you can see some examples of car behavior:
 
+### References ###
+[Optimal Trajectory Generation For Dynamic Street Scenarious in A Frenet Frame](https://d17h27t6h515a5.cloudfront.net/topher/2017/July/595fd482_werling-optimal-trajectory-generation-for-dynamic-street-scenarios-in-a-frenet-frame/werling-optimal-trajectory-generation-for-dynamic-street-scenarios-in-a-frenet-frame.pdf)
                         Report is in process...
                       
 
