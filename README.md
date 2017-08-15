@@ -8,6 +8,11 @@ The goal of this project is to safely navigate a car around a virtual highway wi
 
 A Path-Planner generates a set of trajectories with different target speed, duration, and target driving lanes. Then, a cost function is calculated for every trajectory and the trajectory with the smallest cost is passed to a vehicle controller for execution. The Path-Planner contains stack machine with two states Lane-Keeping and Lane-Changing used to control the process of trajectory generation.
 
+<p align="center">
+<a href="https://youtu.be/ihJIQOgtAWc" target="_blank"><img src="http://img.youtube.com/vi/ihJIQOgtAWc/0.jpg" 
+alt="Particle Filter" width="480" height="360" border="10" /></a>
+</p>
+
 ![change-lane][image1]
 
 ### Coordinate System for Motion Planning ###
