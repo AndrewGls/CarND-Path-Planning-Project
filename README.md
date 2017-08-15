@@ -25,7 +25,7 @@ After that, during the second step, the (x, y) points is computed using formula 
 
 
 ### Jerk Minimizing Trajectories ###
-#### 1	Velocity Keeping Trajectories ####
+#### Velocity Keeping Trajectories ####
 Velocity Keeping Trajectory is the common state where the car spends most of the time, trying to follow the leading car as close as possible with keeping speed limit and safety distance to it. The path for this state is generated as jerk minimizing trajectories using quintic polynomials [Optimal Trajectory Generation For Dynamic Street Scenarious in A Frenet Frame](https://www.researchgate.net/publication/224156269):
 
                           s(t) = a0+ a1*t + a2*t^2 + a3*t^3 +a4*t^4
@@ -50,7 +50,7 @@ Or using matrix form:
 
 The boundary conditions at the start and end states for lateral component are: d0=d1=d, d0_dot=d1_dot=0 and d0_dot_dot=d1_dot_dot=0
 
-#### 2 Lane Changing Trajectories ####
+#### Lane Changing Trajectories ####
 This type of trajectory is generated as a combination of  quartic polynomial trajectory, for the longitudinal component s, using Velocity Keeping Trajectories, with  a quintic polynomial for the lateral component d, using the following linear equation system:
 
       | d1 – d0 – d0_dot – 0.05 * d0_dot_dot * T^2 |   |  T^3    T^4    T^5 |   | a3 |
