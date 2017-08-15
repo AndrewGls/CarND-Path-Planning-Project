@@ -13,8 +13,6 @@ A Path-Planner generates a set of trajectories with different target speed, dura
 alt="Particle Filter" width="480" height="360" border="10" /></a>
 </p>
 
-![change-lane][image1]
-
 ### Coordinate System for Motion Planning ###
 Motion Planning is implemented in the FRENET´ FRAME. All transformations from FRENET´ FRAME coordinates to Cartesian coordinates are supported by special class Waypoints, which loads waypoint coordinates as [x,y,s,dx,dy] values from special file, supplied to the project, and fits two bsplines x(s) and y(s) - the x and y coordinates as functions of longitudinal s-parameter.
 
