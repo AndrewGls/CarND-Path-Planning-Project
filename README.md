@@ -67,15 +67,16 @@ To find optimal trajectories, I used the same approach described in [Optimal Tra
 
                                       Jt = Kv * Jv + Ka * Ja + Kj * Jj + Ks * Js                                
 where:
-      Jv is terms to penalize the deviation from target velocity, calculated as integral of the following function, normalized by horizon of prediction T:
+   Jv is terms to penalize the deviation from target velocity, calculated as integral of the following function, normalized by horizon of prediction T:
       
                                       Jv(t) = (sqrt( s_dot(t)^2 + d_dot(t)^2 ) – v_max)^2
                                       
-      Ja is terms to penalize the maximum acceleration, calculated as integral of the following function, normalized by horizon of prediction T:
+				     
+   Ja is terms to penalize the maximum acceleration, calculated as integral of the following function, normalized by horizon of prediction T:
       
 		                                  Ja(t) = s_dot_dot(t)^2 + d_dot_dot(t)^2
                                       
-      Jj is terms to penalize the maximum jerk, calculated as integral of the following function, normalized by horizon of prediction T:
+   Jj is terms to penalize the maximum jerk, calculated as integral of the following function, normalized by horizon of prediction T:
       
 		                                  Jj(t) = s_dot_dot_dot(t)^2 + d_dot_dot_dot(t)^2
                                      
