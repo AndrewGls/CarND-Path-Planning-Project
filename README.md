@@ -97,6 +97,13 @@ where:
    ts = 1.2 sec
    
 
+### State Machine ###
+The state machine is implemented as object-oriented class PathPlanner, which supports two states: Lane Keeping and Lane Changing. The transaction between two states is implemented using a queue, which contains the active state at the end of it. The switching between two states is initiated by one of these two states Lane Keeping or Lane Changing. 
+####  Lane Keeping State ####
+The Lane Keeping state is the default state of the car, implemented as a class LaneKeeping, and is used to generate velocity keeping trajectories that allow the car to keep the lane close to the speed limit with keeping a safe distance to the leading cars. In addition, this state generates candidate trajectories that allows the car to change the lane. When the car follows to a slowly leading vehicle, the cost of this trajectory is increased due to Jv increasing. As soon as a trajectory with a different target lane has a lower total cost, the lane keeping state is constructed and returned to PathPlanner. The PathPlanner adds this new state at the end of the queue to use this state for optimal trajectory generation during next iteration. During evaluation of all candidate trajectories, the predicted trajectories of closest leading cars at the same lane are used for estimation and keeping safety distance cost Js to the nearest leading car.
+#### Lane Changing State ####
+The Lane Changing state is implemented as a class LaneChanging, and is responsible for executing a safe lane change maneuver. When this state is started to execute, the car has already started to move into the direction of target lane. The lane changing state starts to generate target trajectories with variation of target velocity and duration T along s-direction. For the lateral d-direction, a quintic polynomial trajectory is generated with the target d-coordinate in the center of the target lane and with a fixed lane change duration. During evaluation of all candidate trajectories, the predicted trajectories of all nearby cars at the same lane are used for estimation and keeping a safety distance cost Js to surrounding cars.
+When the lateral d-distance is close to the target d-value, which is the center of lane in Frenet coordinates, the changing lane state is deactivated by returning the nullptr into PathPlanner. The Path Planner detects the nullptr value and removes the Lane Changing state from the queue of active states. As a result, the Lane Keeping will be used during next iteration.
 
 
                         Report is in process...
