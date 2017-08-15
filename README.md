@@ -85,15 +85,17 @@ The safety distance Js of the trajectory in relation to the predicted trajectory
          Js,i(t) = 0 if  d >= d_min
          Js,i(t) = (0.95*exp(-a*d) + 0.05*exp(-a*d_min) – exp(-a*ds) ) / (exp(-a*d_min) – exp(-a*ds)) if  d < d_min
 where:  
-   d is distance to tracked vehicle, calculated as:
+   a-parameter is used to tuning penalty of cost function.
+   d-paramener is distance to tracked vehicle, calculated as:
    
    				d = s(t) – si(t)
 				
-   ds is safety distance, calculated as:
+   ds-parameter is safety distance, calculated as:
    
    				ds(v) = v * ts + d_min
 				
-   ts = 1.2 sec, a-parameters is used to tuning penalty of cost function.
+   ts = 1.2 sec
+   
 
 
 
