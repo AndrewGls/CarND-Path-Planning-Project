@@ -18,9 +18,9 @@ Transformation from FRENET coordinates (s,d) to Cartesian coordinates is impleme
 
 During the first run, the position of the vehicle in Frenet space is initialized by the simulator as a point (x, y) in Cartesian space, which is then transformed to a point (s, d) Frenet space in two steps. During the first step, the s-coordinate is computed using gradient descent optimization solver:
 
-                          Jxy(s)=sqrt( (x – Fx(s))^2 + (y – Fy(s))^2 )
+                          Jxy(s) = sqrt( (x – Fx(s))^2 + (y – Fy(s))^2 )
                           
-After that, during the second step, the (x, y) points is computed using formula (1). This Inverse transformation is added because the simulator doesn't provide the vehicle with the accurate position in Frenet space.
+After that, during the second step, the (x, y) points is computed using formula (1), using d-coordinate. This Inverse transformation is added because the simulator doesn't provide the vehicle with the accurate position in Frenet space.
 
 
 
