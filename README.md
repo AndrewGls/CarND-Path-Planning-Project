@@ -41,8 +41,9 @@ The boundary conditions for the current state at the star t=0 of the trajectory 
 The boundary conditions at the end t=T of the trajectory are the longitudinal velocity s1_dot and acceleration s1_dot_dot, which is commonly zero. Using (2) and (3), the other a3 and a4 parameters can be calculated using the following linear equation system:
 
                           s1_dot =s0_dot + s0_dot_dot * T + 3 * a3 * T^2 + 4*a4*T^3
-                          s1_dot_dot = s0_dot_dot + 6 * a3 * T + 12 * a4 * T^2
-Or using matrix form: 
+                          s1_dot_dot = s0_dot_dot + 6 * a3 * T + 12 * a4 * T^2                          
+Or using matrix form:         
+        
                           | s1_dot – s0_dot – s0_dot_dot * T |   | 3T^2   4T^3 |   | a3 |
                           |                                  | = |             | x |    |
                           |    s1_dot_dot – s0_dot_dot       |   | 6T    12T^2 |   | a4 |
