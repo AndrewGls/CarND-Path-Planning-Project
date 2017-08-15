@@ -2,6 +2,7 @@
 Self-Driving Car Engineer Nanodegree Program
 
 [image1]: ./report/img/clr-2.png "IMG-CLR-2"
+[image2]: ./report/img/samples.png "SAMPLES"
 
 The goal of this project is to safely navigate a car around a virtual highway with other traffic that is driving +-10 MPH of the 50 MPH speed limit using a path planning algorithm. The autonomous car should drive passengers with comfort meaning with limited maximum acceleration and jerk. In this project, I decided to follow the approach described in here: [Optimal Trajectory Generation For Dynamic Street Scenarious in A Frenet Frame](https://d17h27t6h515a5.cloudfront.net/topher/2017/July/595fd482_werling-optimal-trajectory-generation-for-dynamic-street-scenarios-in-a-frenet-frame/werling-optimal-trajectory-generation-for-dynamic-street-scenarios-in-a-frenet-frame.pdf)
 
@@ -107,7 +108,7 @@ When the lateral d-distance is close to the target d-value, which is the center 
 
 ### Results ###
 The implemented path planner is able to navigate safely through highway traffic with speed close to target speed limit. The car is able to keep lane with speed limit if the current lane is empty or execute safety maneuvers in order to overpass slow cars. Bellow, you can see some examples of car behavior:
-                      
+![samples][image2]
 
 
 ### The Term3 Simulator BETA which contains the Path Planning Project from the [releases tab](https://github.com/udacity/self-driving-car-sim/releases).
