@@ -43,7 +43,7 @@ The boundary conditions at the end t=T of the trajectory are the longitudinal ve
                           s1_dot =s0_dot + s0_dot_dot * T + 3 * a3 * T^2 + 4*a4*T^3
                           s1_dot_dot = s0_dot_dot + 6 * a3 * T + 12 * a4 * T^2                          
 Or using matrix form:         
-        
+ 
                           | s1_dot – s0_dot – s0_dot_dot * T |   | 3T^2   4T^3 |   | a3 |
                           |                                  | = |             | x |    |
                           |    s1_dot_dot – s0_dot_dot       |   | 6T    12T^2 |   | a4 |
@@ -57,6 +57,10 @@ This type of trajectory is generated as a combination of  quartic polynomial tra
       | d1_dot – d0_dot – d0_dot_dot * T           | = | 3T^2   4T^3   5T^4 | x | a4 |
       | d1_dot_dot – d0_dot_dot                    |   | 6T    12T^2  20T^3 |   | a5 |
 
+
+### Sensor Fusion & Tracking of Other Vehicles ###
+Every 20 ms the SDC vehicle receives sensor fusion data from the simulator as an array of [id, x, y, vx, vy, s, d] elements for every tracked vehicle, where id is unique ID of vehicle, (x,y) is position and (vx, vy) is vector speed of tracked vehicle, (s, d) is position in Frenet coordinates. Unfortunately, (s, d) in general is not accurate enough to be used directly in SDC vehicle.
+The data from sensor fusion are passed to the SensorFusion class which is used to predict the state (or Constant Velocity trajectory) of every tracked vehicle [s, d, vs] in every 20ms. The predicted state [s, d, vs] is the position (s, d) in Frenet coordinates and vs is longitudinal velocity. The position in Frenet space is recalculated using Waypoints class with data from sensor fusion:  (x, y), s-coordinate and vector of speed (vx, vy) (see Coordinate System for Motion Planning).
 
 
                         Report is in process...
