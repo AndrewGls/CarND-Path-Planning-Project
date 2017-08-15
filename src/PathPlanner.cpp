@@ -1,7 +1,8 @@
 #include "PathPlanner.h"
-#include "LineKeeping.h"
+#include "LaneKeeping.h"
 #include <iostream>
 #include <assert.h>
+#include <memory>
 
 
 using Eigen::VectorXd;
@@ -12,7 +13,7 @@ using namespace std;
 PathPlanner::PathPlanner()
 {
 	m_states.reserve(2);
-	m_states.push_back(std::make_unique<LineKeeping>());
+	m_states.push_back(unique_ptr<LineKeeping>(new LineKeeping));
 }
 
 TrajectoryPtr PathPlanner::OptimalTrajectory (const VectorXd& currStateX6, double currTime, const SensorFusion& sensorFusion)

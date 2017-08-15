@@ -14,7 +14,8 @@
 //#define VERBOSE_OTHER_LEADING_CARS
 //#define VERBOSE_OTHER_IGNORED_CARS
 
-#define VERBOSE_STATE
+//#define VERBOSE_STATE
+
 
 struct Point
 {

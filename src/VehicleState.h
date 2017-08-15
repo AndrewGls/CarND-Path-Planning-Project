@@ -22,14 +22,13 @@ protected:
 	constexpr static double m_SpeedLimit = (50 - 2) * 0.44704; // speed limit in m/s
 	constexpr static double m_HorizontPrediction = 10; // sec
 	constexpr static double m_TimeStep = 0.1;
-
-	// different lanes has different MAX SPEED!!!!
-	static constexpr double m_MaxSpeedFactors[3] = { 0.95, 0.975, 1. };
 };
 
 
 inline double VehicleState::GetCorrectedVelocity(double velocity, int nLane) const
 {
+	// different lanes has different MAX SPEED!!!!
+	static const double m_MaxSpeedFactors[3] = { 0.95, 0.975, 1. };
 	assert(nLane >= 0 && nLane <= 2);
 	return velocity * m_MaxSpeedFactors[nLane];
 }

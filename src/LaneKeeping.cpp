@@ -1,4 +1,4 @@
-﻿#include "LineKeeping.h"
+﻿#include "LaneKeeping.h"
 #include "Types.h"
 #include "TrajectoryPool.h"
 #include "LaneChanging.h"
@@ -135,7 +135,7 @@ std::tuple<VehicleState*, TrajectoryPtr> LineKeeping::OptimalTrajectory( const E
 #endif // #ifdef VERBOSE_BEST_TRAJECTORY
 
 
-	pOptimalTraj->PrintInfo();
+//	pOptimalTraj->PrintInfo();
 
 	return tuple<VehicleState*, TrajectoryPtr>(pNextState, pOptimalTraj);
 }

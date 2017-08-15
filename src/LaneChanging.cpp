@@ -71,7 +71,7 @@ tuple<VehicleState*, TrajectoryPtr> LaneChanging::OptimalTrajectory(const Eigen:
 	cout << "------- Best ----------" << endl;
 #endif // #ifdef VERBOSE_BEST_TRAJECTORY
 
-	pOptimalTraj->PrintInfo();
+//	pOptimalTraj->PrintInfo();
 
 	return tuple<VehicleState*, TrajectoryPtr>(pNextState, pOptimalTraj);
 }
